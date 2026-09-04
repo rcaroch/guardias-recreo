@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cuadrante de Guardias de Recreo - Centro Escolar</title>
-  <!-- Librería para generar el PDF de forma directa -->
+  <title>Guardias de Recreo - Escolapios Genil</title>
+  <!-- Librería html2pdf para exportar directamente -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
@@ -35,7 +35,7 @@
     }
 
     .container {
-      max-width: 1440px;
+      max-width: 1460px;
       margin: 0 auto;
     }
 
@@ -93,7 +93,7 @@
 
     .main-layout {
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: 380px 1fr;
       gap: 18px;
       align-items: start;
     }
@@ -125,8 +125,8 @@
       margin-bottom: 10px;
     }
 
-    input[type="text"], select {
-      padding: 6px 10px;
+    input[type="text"], select, input[type="number"] {
+      padding: 6px 8px;
       border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 0.82rem;
@@ -136,7 +136,7 @@
     input[type="text"] { flex: 1; }
 
     .list-container {
-      max-height: 380px;
+      max-height: 400px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -168,16 +168,27 @@
       border-radius: 10px;
       font-weight: 700;
       white-space: nowrap;
+      min-width: 32px;
+      text-align: center;
     }
     .badge-ok { background: #dcfce7; color: var(--success); }
     .badge-pending { background: #fef3c7; color: var(--warning); }
     .badge-over { background: #fee2e2; color: var(--danger); }
 
     .tutoria-select {
-      max-width: 110px;
+      max-width: 100px;
       font-size: 0.75rem;
       padding: 3px 4px;
       border-color: #cbd5e1;
+    }
+
+    .guardias-input {
+      width: 44px;
+      padding: 3px 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: center;
+      border: 1px solid #cbd5e1;
     }
 
     .icon-btn {
@@ -292,17 +303,17 @@
 <div class="container">
   <header>
     <div class="header-info">
-      <h1>Cuadrante de Guardias de Recreo</h1>
-      <p>Curso Escolar (Septiembre - Junio) • 2 guardias semanales por docente con prioridad por tutoría</p>
+      <h1>Guardias de Recreo-Escolapios Genil</h1>
+      <p>Curso Escolar (Septiembre - Junio) • Guardias semanales configurables por docente y prioridad por tutoría</p>
     </div>
     <div class="toolbar">
       <button class="btn-primary" onclick="autoAsignar()">🪄 Reparto Automático</button>
       <button class="btn-success" onclick="exportarPDF()">📄 Descargar PDF</button>
       <button class="btn-outline" onclick="window.print()">🖨️ Imprimir</button>
       
-      <!-- Botones de Copia de Seguridad -->
-      <button class="btn-outline" onclick="exportarCopiaSeguridad()" title="Descargar un archivo de copia para usar en otro ordenador">💾 Guardar Copia</button>
-      <button class="btn-outline" onclick="document.getElementById('inputImportar').click()" title="Cargar un archivo de copia guardado previamente">📂 Cargar Copia</button>
+      <!-- Copias de seguridad -->
+      <button class="btn-outline" onclick="exportarCopiaSeguridad()" title="Descargar copia de seguridad para llevar a otro ordenador">💾 Guardar Copia</button>
+      <button class="btn-outline" onclick="document.getElementById('inputImportar').click()" title="Cargar archivo de copia de seguridad">📂 Cargar Copia</button>
       <input type="file" id="inputImportar" accept=".json" style="display:none;" onchange="importarCopiaSeguridad(event)" />
       
       <button class="btn-danger" onclick="limpiarCuadrante()">🗑️ Vaciar</button>
@@ -320,19 +331,27 @@
           <input type="text" id="nuevaZonaNombre" placeholder="Ej. Pista 3º, Pasillo..." onkeypress="if(event.key==='Enter') agregarZona()" />
           <button class="btn-outline" onclick="agregarZona()">+ Añadir</button>
         </div>
-        <div class="list-container" id="zonasList" style="max-height: 170px;"></div>
+        <div class="list-container" id="zonasList" style="max-height: 160px;"></div>
       </div>
 
-      <!-- Gestión de Docentes y Tutorías -->
+      <!-- Gestión de Docentes -->
       <div class="card">
-        <h2>Docentes (<span id="total-docentes">0</span>)</h2>
+        <h2>
+          Docentes (<span id="total-docentes">0</span>)
+          <span id="balance-badge" style="font-size:0.75rem; font-weight:normal; color:var(--text-muted);"></span>
+        </h2>
+        
         <div class="input-row">
           <input type="text" id="nuevoDocenteNombre" placeholder="Nombre (ej. Pepe)..." onkeypress="if(event.key==='Enter') agregarDocente()" />
+          <input type="number" id="nuevoDocenteGuardias" value="2" min="0" max="10" title="Guardias semanales por defecto" style="width: 48px; text-align: center;" />
           <button class="btn-primary" onclick="agregarDocente()">+ Añadir</button>
         </div>
-        <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 6px;">
-          Asigna su tutoría para darle prioridad en esa pista:
-        </p>
+
+        <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; padding:0 4px;">
+          <span>Nombre</span>
+          <span>Tutoría / Guardias / Estado</span>
+        </div>
+        
         <div class="list-container" id="docentesList"></div>
       </div>
 
@@ -375,28 +394,37 @@
   ];
 
   const DOCENTES_DEFECTO = [
-    { nombre: "García, M. (Pepe)", tutoria: "Pista 3º" },
-    { nombre: "Rodríguez, L.", tutoria: "Pista 4º" },
-    { nombre: "Fernández, C.", tutoria: "Pista 5º" },
-    { nombre: "López, A.", tutoria: "Pista 6º" },
-    { nombre: "Martínez, S.", tutoria: "" },
-    { nombre: "Sánchez, P.", tutoria: "" },
-    { nombre: "Pérez, D.", tutoria: "" },
-    { nombre: "Gómez, R.", tutoria: "" },
-    { nombre: "Martín, E.", tutoria: "" },
-    { nombre: "Jiménez, I.", tutoria: "" },
-    { nombre: "Ruiz, V.", tutoria: "" },
-    { nombre: "Hernández, J.", tutoria: "" },
-    { nombre: "Díaz, F.", tutoria: "" },
-    { nombre: "Moreno, T.", tutoria: "" },
-    { nombre: "Álvarez, B.", tutoria: "" }
+    { nombre: "García, M. (Pepe)", tutoria: "Pista 3º", maxGuardias: 2 },
+    { nombre: "Rodríguez, L.", tutoria: "Pista 4º", maxGuardias: 2 },
+    { nombre: "Fernández, C.", tutoria: "Pista 5º", maxGuardias: 2 },
+    { nombre: "López, A.", tutoria: "Pista 6º", maxGuardias: 2 },
+    { nombre: "Martínez, S.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Sánchez, P.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Pérez, D.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Gómez, R.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Martín, E.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Jiménez, I.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Ruiz, V.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Hernández, J.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Díaz, F.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Moreno, T.", tutoria: "", maxGuardias: 2 },
+    { nombre: "Álvarez, B.", tutoria: "", maxGuardias: 2 }
   ];
 
-  // Carga de datos
+  // Carga de datos y compatibilidad con versiones anteriores
   let zonas = JSON.parse(localStorage.getItem('guardias_zonas')) || ZONAS_DEFECTO;
   
   let rawDocentes = JSON.parse(localStorage.getItem('guardias_docentes')) || DOCENTES_DEFECTO;
-  let docentes = rawDocentes.map(d => typeof d === 'string' ? { nombre: d, tutoria: '' } : d);
+  let docentes = rawDocentes.map(d => {
+    if (typeof d === 'string') {
+      return { nombre: d, tutoria: '', maxGuardias: 2 };
+    }
+    return {
+      nombre: d.nombre,
+      tutoria: d.tutoria || '',
+      maxGuardias: (d.maxGuardias !== undefined && d.maxGuardias !== null) ? Number(d.maxGuardias) : 2
+    };
+  });
 
   let cuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
 
@@ -407,10 +435,10 @@
     render();
   }
 
-  // --- Funciones de Copia de Seguridad ---
+  // --- Copia de Seguridad ---
   function exportarCopiaSeguridad() {
     const backupData = {
-      version: 1,
+      version: 2,
       fecha: new Date().toLocaleDateString('es-ES'),
       zonas: zonas,
       docentes: docentes,
@@ -440,9 +468,16 @@
           return;
         }
 
-        if (confirm(`¿Cargar esta copia de seguridad del ${data.fecha || 'archivo'}?\nReemplazará lo que tienes actualmente en pantalla.`)) {
+        if (confirm(`¿Cargar esta copia de seguridad del ${data.fecha || 'archivo'}?\nReemplazará los datos actuales en pantalla.`)) {
           zonas = data.zonas;
-          docentes = data.docentes.map(d => typeof d === 'string' ? { nombre: d, tutoria: '' } : d);
+          docentes = data.docentes.map(d => {
+            if (typeof d === 'string') return { nombre: d, tutoria: '', maxGuardias: 2 };
+            return {
+              nombre: d.nombre,
+              tutoria: d.tutoria || '',
+              maxGuardias: (d.maxGuardias !== undefined && d.maxGuardias !== null) ? Number(d.maxGuardias) : 2
+            };
+          });
           cuadrante = data.cuadrante;
           guardarTodo();
           alert("¡Copia cargada con éxito!");
@@ -450,12 +485,12 @@
       } catch (err) {
         alert("Hubo un error al leer el archivo. Asegúrate de que sea el archivo .json correcto.");
       }
-      event.target.value = ""; // Limpiar input para permitir cargar el mismo archivo de nuevo
+      event.target.value = "";
     };
     reader.readAsText(file);
   }
 
-  // --- Operaciones de Zonas ---
+  // --- Gestión de Zonas ---
   function agregarZona() {
     const input = document.getElementById('nuevaZonaNombre');
     const nombre = input.value.trim();
@@ -506,13 +541,17 @@
     }
   }
 
-  // --- Operaciones de Docentes ---
+  // --- Gestión de Docentes ---
   function agregarDocente() {
-    const input = document.getElementById('nuevoDocenteNombre');
-    const nombre = input.value.trim();
+    const inputNombre = document.getElementById('nuevoDocenteNombre');
+    const inputGuardias = document.getElementById('nuevoDocenteGuardias');
+    const nombre = inputNombre.value.trim();
+    const guardias = parseInt(inputGuardias.value) >= 0 ? parseInt(inputGuardias.value) : 2;
+
     if (nombre && !docentes.some(d => d.nombre === nombre)) {
-      docentes.push({ nombre: nombre, tutoria: '' });
-      input.value = '';
+      docentes.push({ nombre: nombre, tutoria: '', maxGuardias: guardias });
+      inputNombre.value = '';
+      inputGuardias.value = '2';
       guardarTodo();
     }
   }
@@ -532,6 +571,13 @@
 
   function cambiarTutoriaDocente(index, zonaSeleccionada) {
     docentes[index].tutoria = zonaSeleccionada;
+    guardarTodo();
+  }
+
+  function cambiarMaxGuardias(index, valor) {
+    let num = parseInt(valor);
+    if (isNaN(num) || num < 0) num = 0;
+    docentes[index].maxGuardias = num;
     guardarTodo();
   }
 
@@ -598,9 +644,9 @@
       const origenKey = `${draggedData.dia}_${draggedData.zona}`;
       cuadrante[destinoKey] = draggedData.nombre;
       if (docenteDestinoActual) {
-        cuadrante[origenKey] = docenteDestinoActual; // Intercambio
+        cuadrante[origenKey] = docenteDestinoActual;
       } else {
-        delete cuadrante[origenKey]; // Movimiento
+        delete cuadrante[origenKey];
       }
     }
     draggedData = null;
@@ -619,7 +665,7 @@
     }
   }
 
-  // --- Algoritmo de Reparto Automático con Prioridad de Tutorías ---
+  // --- Algoritmo de Reparto Inteligente según horas semanales ---
   function autoAsignar() {
     cuadrante = {};
     const conteo = {};
@@ -627,32 +673,40 @@
 
     // FASE 1: Prioridad absoluta para tutores en su propia pista
     docentes.forEach(doc => {
-      if (doc.tutoria && zonas.includes(doc.tutoria)) {
+      const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
+      if (doc.tutoria && zonas.includes(doc.tutoria) && maxG > 0) {
         const diasDisponibles = [...DIAS].sort(() => Math.random() - 0.5);
         for (let dia of diasDisponibles) {
           const key = `${dia}_${doc.tutoria}`;
           const yaEnDia = zonas.some(z => cuadrante[`${dia}_${z}`] === doc.nombre);
-          if (!cuadrante[key] && !yaEnDia && conteo[doc.nombre] < 2) {
+          if (!cuadrante[key] && !yaEnDia && conteo[doc.nombre] < maxG) {
             cuadrante[key] = doc.nombre;
             conteo[doc.nombre]++;
           }
-          if (conteo[doc.nombre] >= 2) break;
+          if (conteo[doc.nombre] >= maxG) break;
         }
       }
     });
 
-    // FASE 2: Rellenar los huecos restantes equitativamente
+    // FASE 2: Rellenar equitativamente priorizando a quienes necesitan más guardias
     DIAS.forEach(dia => {
       zonas.forEach(zona => {
         const key = `${dia}_${zona}`;
         if (!cuadrante[key]) {
           const disponibles = docentes.filter(doc => {
+            const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
             const yaEnDia = zonas.some(z => cuadrante[`${dia}_${z}`] === doc.nombre);
-            return conteo[doc.nombre] < 2 && !yaEnDia;
+            return conteo[doc.nombre] < maxG && !yaEnDia;
           });
 
           if (disponibles.length > 0) {
-            disponibles.sort((a, b) => conteo[a.nombre] - conteo[b.nombre] || Math.random() - 0.5);
+            // Priorizar a los que más guardias pendientes les queden por cubrir
+            disponibles.sort((a, b) => {
+              const pendientesA = (a.maxGuardias !== undefined ? a.maxGuardias : 2) - conteo[a.nombre];
+              const pendientesB = (b.maxGuardias !== undefined ? b.maxGuardias : 2) - conteo[b.nombre];
+              return (pendientesB - pendientesA) || (Math.random() - 0.5);
+            });
+
             const elegido = disponibles[0];
             cuadrante[key] = elegido.nombre;
             conteo[elegido.nombre]++;
@@ -682,7 +736,7 @@
     });
   }
 
-  // --- Renderizado de Interfaz ---
+  // --- Renderizado UI ---
   function render() {
     // 1. Zonas
     document.getElementById('total-zonas').textContent = zonas.length;
@@ -697,14 +751,23 @@
       </div>
     `).join('');
 
+    // Cálculo de puestos vs guardias totales
+    const huecosTotales = zonas.length * 5;
+    const guardiasRequeridas = docentes.reduce((total, d) => total + (d.maxGuardias !== undefined ? d.maxGuardias : 2), 0);
+    const balanceSpan = document.getElementById('balance-badge');
+    balanceSpan.textContent = `Req: ${guardiasRequeridas} / Huecos: ${huecosTotales}`;
+    balanceSpan.style.color = guardiasRequeridas === huecosTotales ? 'var(--success)' : 'var(--warning)';
+
     // 2. Docentes
     document.getElementById('total-docentes').textContent = docentes.length;
     const docentesList = document.getElementById('docentesList');
     docentesList.innerHTML = docentes.map((doc, idx) => {
       const cant = contarGuardias(doc.nombre);
+      const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
+      
       let badgeClass = 'badge-pending';
-      if (cant === 2) badgeClass = 'badge-ok';
-      if (cant > 2) badgeClass = 'badge-over';
+      if (cant === maxG) badgeClass = 'badge-ok';
+      if (cant > maxG) badgeClass = 'badge-over';
 
       const opcionesTutoria = `
         <option value="">Sin tutoría</option>
@@ -713,14 +776,15 @@
 
       return `
         <div class="list-item docente-draggable" draggable="true" ondragstart="onDragStartDocente(event, '${doc.nombre}')">
-          <span style="font-weight:500; cursor:pointer;" onclick="editarDocenteNombre(${idx})" title="Clic para renombrar">
+          <span style="font-weight:500; cursor:pointer; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" onclick="editarDocenteNombre(${idx})" title="Clic para renombrar">
             ${doc.nombre}
           </span>
-          <div style="display:flex; align-items:center; gap:5px;">
-            <select class="tutoria-select" onchange="cambiarTutoriaDocente(${idx}, this.value)" title="Asignar pista prioritaria">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <select class="tutoria-select" onchange="cambiarTutoriaDocente(${idx}, this.value)" title="Pista prioritaria de tutoría">
               ${opcionesTutoria}
             </select>
-            <span class="badge ${badgeClass}">${cant}/2</span>
+            <input type="number" class="guardias-input" min="0" max="10" value="${maxG}" onchange="cambiarMaxGuardias(${idx}, this.value)" title="Guardias semanales asignadas a este docente" />
+            <span class="badge ${badgeClass}" title="Asignadas / Requeridas">${cant}/${maxG}</span>
             <button class="icon-btn" onclick="eliminarDocente(${idx})" title="Eliminar docente">&times;</button>
           </div>
         </div>
@@ -762,7 +826,7 @@
     }).join('');
   }
 
-  // Carga inicial
+  // Inicialización
   render();
 </script>
 </body>
