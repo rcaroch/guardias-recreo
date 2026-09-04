@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guardias de Recreo - Escolapios Genil</title>
+  <title>Cuadrante de Guardias de Recreo - Centro Escolar</title>
   <!-- Librería para exportar directamente a PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -242,7 +242,7 @@
     }
 
     .drop-zone {
-      min-height: 62px;
+      min-height: 64px;
       background: #ffffff;
       border-radius: 4px;
       transition: background 0.2s;
@@ -309,7 +309,7 @@
 <div class="container">
   <header>
     <div class="header-info">
-      <h1>Guardias de Recreo- Escolapios Genil</h1>
+      <h1>Cuadrante de Guardias de Recreo</h1>
       <p>Curso Escolar (Septiembre - Junio) • Zonas con múltiples docentes simultáneos y prioridad por tutoría</p>
     </div>
     <div class="toolbar">
@@ -335,7 +335,7 @@
         <h2>Zonas de Guardia (<span id="total-zonas">0</span>)</h2>
         <div class="input-row">
           <input type="text" id="nuevaZonaNombre" placeholder="Nombre (ej. Pista 3º)..." onkeypress="if(event.key==='Enter') agregarZona()" />
-          <input type="number" id="nuevaZonaCapacidad" value="1" min="1" max="4" title="Docentes simultáneos en esta zona" style="width: 44px; text-align: center;" />
+          <input type="number" id="nuevaZonaCapacidad" value="1" min="1" max="5" title="Docentes simultáneos en esta zona" style="width: 44px; text-align: center;" />
           <button class="btn-outline" onclick="agregarZona()">+ Añadir</button>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; padding:0 4px;">
@@ -395,7 +395,6 @@
 <script>
   const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
-  // Configuración por defecto: Pista 3º con 2 docentes simultáneos
   const ZONAS_DEFECTO = [
     { nombre: "Pista 3º", capacidad: 2 },
     { nombre: "Pista 4º", capacidad: 1 },
@@ -445,7 +444,7 @@
     };
   });
 
-  // Carga y normalización de Cuadrante: Ahora cada celda almacena un array de nombres ['Docente1', 'Docente2']
+  // Carga y normalización de Cuadrante
   let rawCuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
   let cuadrante = {};
   for (let key in rawCuadrante) {
@@ -702,12 +701,10 @@
       }
 
       if (targetList.length < maxCap) {
-        // Hay espacio libre: simplemente se mueve
         cuadrante[origKey] = (cuadrante[origKey] || []).filter(n => n !== draggedData.nombre);
         targetList.push(draggedData.nombre);
         cuadrante[destKey] = targetList;
       } else {
-        // Puesto lleno: intercambiar con el último docente del puesto destino
         const desplazado = targetList.pop();
         targetList.push(draggedData.nombre);
         cuadrante[origKey] = (cuadrante[origKey] || []).filter(n => n !== draggedData.nombre);
@@ -733,65 +730,80 @@
     }
   }
 
-  // --- Algoritmo de Reparto Automático Adaptativo ---
+  // --- Algoritmo de Reparto Automático Equitativo y Balanceado ---
   function autoAsignar() {
     cuadrante = {};
     const conteo = {};
     docentes.forEach(d => conteo[d.nombre] = 0);
 
-    // Inicializar casillas como arrays vacíos
+    // 1. Inicializar todas las casillas vacías de lunes a viernes
     DIAS.forEach(dia => {
       zonas.forEach(z => {
         cuadrante[`${dia}_${z.nombre}`] = [];
       });
     });
 
-    // FASE 1: Prioridad de tutores en su pista correspondiente
+    // 2. FASE 1: Asignar tutores a su pista en días diferentes y repartidos
     docentes.forEach(doc => {
       const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
       const zonaObj = zonas.find(z => z.nombre === doc.tutoria);
       
       if (zonaObj && maxG > 0) {
-        const diasDisponibles = [...DIAS].sort(() => Math.random() - 0.5);
-        for (let dia of diasDisponibles) {
+        const cupoTutor = Math.min(maxG, 2);
+        // Barajar días para no concentrar tutores siempre en lunes
+        const diasMezclados = [...DIAS].sort(() => Math.random() - 0.5);
+        
+        for (let dia of diasMezclados) {
           const key = `${dia}_${zonaObj.nombre}`;
           const yaEnDia = zonas.some(z => (cuadrante[`${dia}_${z.nombre}`] || []).includes(doc.nombre));
           
-          if (cuadrante[key].length < zonaObj.capacidad && !yaEnDia && conteo[doc.nombre] < maxG) {
+          if (cuadrante[key].length < zonaObj.capacidad && !yaEnDia && conteo[doc.nombre] < cupoTutor) {
             cuadrante[key].push(doc.nombre);
             conteo[doc.nombre]++;
           }
-          if (conteo[doc.nombre] >= maxG) break;
+          if (conteo[doc.nombre] >= cupoTutor) break;
         }
       }
     });
 
-    // FASE 2: Rellenar equitativamente los puestos restantes
+    // 3. FASE 2: Recopilar todos los huecos libres de toda la semana
+    const huecosPendientes = [];
     DIAS.forEach(dia => {
-      zonas.forEach(zona => {
-        const key = `${dia}_${zona.nombre}`;
-        
-        while (cuadrante[key].length < zona.capacidad) {
-          const disponibles = docentes.filter(doc => {
-            const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
-            const yaEnDia = zonas.some(z => (cuadrante[`${dia}_${z.nombre}`] || []).includes(doc.nombre));
-            return conteo[doc.nombre] < maxG && !yaEnDia;
-          });
-
-          if (disponibles.length === 0) break; // No hay más candidatos válidos hoy
-
-          // Priorizar a quien le queden más turnos por cumplir
-          disponibles.sort((a, b) => {
-            const pendientesA = (a.maxGuardias !== undefined ? a.maxGuardias : 2) - conteo[a.nombre];
-            const pendientesB = (b.maxGuardias !== undefined ? b.maxGuardias : 2) - conteo[b.nombre];
-            return (pendientesB - pendientesA) || (Math.random() - 0.5);
-          });
-
-          const elegido = disponibles[0];
-          cuadrante[key].push(elegido.nombre);
-          conteo[elegido.nombre]++;
+      zonas.forEach(z => {
+        const asignadosActuales = (cuadrante[`${dia}_${z.nombre}`] || []).length;
+        for (let i = asignadosActuales; i < z.capacidad; i++) {
+          huecosPendientes.push({ dia: dia, zona: z.nombre });
         }
       });
+    });
+
+    // Barajar los huecos para distribuir homogéneamente por todos los días (evita acumulación en lunes)
+    huecosPendientes.sort(() => Math.random() - 0.5);
+
+    // 4. Asignar los puestos libres con prioridad para docentes con más guardias pendientes
+    huecosPendientes.forEach(hueco => {
+      const key = `${hueco.dia}_${hueco.zona}`;
+      
+      const candidatos = docentes.filter(d => {
+        const maxG = d.maxGuardias !== undefined ? d.maxGuardias : 2;
+        if (conteo[d.nombre] >= maxG) return false;
+        // Impedir repetir docente en el mismo día
+        const yaEnDia = zonas.some(z => (cuadrante[`${hueco.dia}_${z.nombre}`] || []).includes(d.nombre));
+        return !yaEnDia;
+      });
+
+      if (candidatos.length > 0) {
+        // Ordenar primero a quienes tienen más guardias pendientes por cumplir
+        candidatos.sort((a, b) => {
+          const pendA = (a.maxGuardias !== undefined ? a.maxGuardias : 2) - conteo[a.nombre];
+          const pendB = (b.maxGuardias !== undefined ? b.maxGuardias : 2) - conteo[b.nombre];
+          return (pendB - pendA) || (Math.random() - 0.5);
+        });
+
+        const elegido = candidatos[0];
+        cuadrante[key].push(elegido.nombre);
+        conteo[elegido.nombre]++;
+      }
     });
 
     guardarTodo();
