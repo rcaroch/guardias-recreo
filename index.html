@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guardias de Recreo - Escolapios Genil</title>
+  <title>Cuadrante de Guardias de Recreo - Centro Escolar</title>
+  <!-- Librería para generar el PDF de forma directa -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
@@ -291,13 +292,19 @@
 <div class="container">
   <header>
     <div class="header-info">
-      <h1>Guardias de Recreo Escolapios Genil</h1>
+      <h1>Cuadrante de Guardias de Recreo</h1>
       <p>Curso Escolar (Septiembre - Junio) • 2 guardias semanales por docente con prioridad por tutoría</p>
     </div>
     <div class="toolbar">
       <button class="btn-primary" onclick="autoAsignar()">🪄 Reparto Automático</button>
       <button class="btn-success" onclick="exportarPDF()">📄 Descargar PDF</button>
       <button class="btn-outline" onclick="window.print()">🖨️ Imprimir</button>
+      
+      <!-- Botones de Copia de Seguridad -->
+      <button class="btn-outline" onclick="exportarCopiaSeguridad()" title="Descargar un archivo de copia para usar en otro ordenador">💾 Guardar Copia</button>
+      <button class="btn-outline" onclick="document.getElementById('inputImportar').click()" title="Cargar un archivo de copia guardado previamente">📂 Cargar Copia</button>
+      <input type="file" id="inputImportar" accept=".json" style="display:none;" onchange="importarCopiaSeguridad(event)" />
+      
       <button class="btn-danger" onclick="limpiarCuadrante()">🗑️ Vaciar</button>
     </div>
   </header>
@@ -324,7 +331,7 @@
           <button class="btn-primary" onclick="agregarDocente()">+ Añadir</button>
         </div>
         <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 6px;">
-          Asigna su tutoría en el desplegable para priorizar su pista:
+          Asigna su tutoría para darle prioridad en esa pista:
         </p>
         <div class="list-container" id="docentesList"></div>
       </div>
@@ -385,11 +392,10 @@
     { nombre: "Álvarez, B.", tutoria: "" }
   ];
 
-  // Migración y carga de datos con LocalStorage
+  // Carga de datos
   let zonas = JSON.parse(localStorage.getItem('guardias_zonas')) || ZONAS_DEFECTO;
   
   let rawDocentes = JSON.parse(localStorage.getItem('guardias_docentes')) || DOCENTES_DEFECTO;
-  // Si los datos previos guardados eran strings simples, convertirlos a objetos
   let docentes = rawDocentes.map(d => typeof d === 'string' ? { nombre: d, tutoria: '' } : d);
 
   let cuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
@@ -399,6 +405,54 @@
     localStorage.setItem('guardias_docentes', JSON.stringify(docentes));
     localStorage.setItem('guardias_cuadrante', JSON.stringify(cuadrante));
     render();
+  }
+
+  // --- Funciones de Copia de Seguridad ---
+  function exportarCopiaSeguridad() {
+    const backupData = {
+      version: 1,
+      fecha: new Date().toLocaleDateString('es-ES'),
+      zonas: zonas,
+      docentes: docentes,
+      cuadrante: cuadrante
+    };
+
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const fechaArchivo = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `guardias_recreo_backup_${fechaArchivo}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importarCopiaSeguridad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.zonas || !data.docentes || !data.cuadrante) {
+          alert("El archivo no tiene el formato correcto de copia de seguridad.");
+          return;
+        }
+
+        if (confirm(`¿Cargar esta copia de seguridad del ${data.fecha || 'archivo'}?\nReemplazará lo que tienes actualmente en pantalla.`)) {
+          zonas = data.zonas;
+          docentes = data.docentes.map(d => typeof d === 'string' ? { nombre: d, tutoria: '' } : d);
+          cuadrante = data.cuadrante;
+          guardarTodo();
+          alert("¡Copia cargada con éxito!");
+        }
+      } catch (err) {
+        alert("Hubo un error al leer el archivo. Asegúrate de que sea el archivo .json correcto.");
+      }
+      event.target.value = ""; // Limpiar input para permitir cargar el mismo archivo de nuevo
+    };
+    reader.readAsText(file);
   }
 
   // --- Operaciones de Zonas ---
@@ -419,7 +473,6 @@
       const limpio = nuevoNombre.trim();
       zonas[index] = limpio;
 
-      // Actualizar turnos asignados a esta zona
       const nuevoCuadrante = {};
       for (let key in cuadrante) {
         const [dia, z] = key.split('_');
@@ -431,7 +484,6 @@
       }
       cuadrante = nuevoCuadrante;
 
-      // Actualizar tutorías vinculadas
       docentes.forEach(d => {
         if (d.tutoria === zonaActual) d.tutoria = limpio;
       });
@@ -510,7 +562,7 @@
     return veces > 1;
   }
 
-  // --- Arrastrar y Soltar (Drag & Drop) ---
+  // --- Drag and Drop ---
   let draggedData = null;
 
   function onDragStartDocente(e, nombre) {
@@ -576,7 +628,6 @@
     // FASE 1: Prioridad absoluta para tutores en su propia pista
     docentes.forEach(doc => {
       if (doc.tutoria && zonas.includes(doc.tutoria)) {
-        // Asignar hasta 2 días en su pista correspondiente
         const diasDisponibles = [...DIAS].sort(() => Math.random() - 0.5);
         for (let dia of diasDisponibles) {
           const key = `${dia}_${doc.tutoria}`;
@@ -595,14 +646,12 @@
       zonas.forEach(zona => {
         const key = `${dia}_${zona}`;
         if (!cuadrante[key]) {
-          // Candidatos disponibles: < 2 guardias y que no estén hoy de guardia
           const disponibles = docentes.filter(doc => {
             const yaEnDia = zonas.some(z => cuadrante[`${dia}_${z}`] === doc.nombre);
             return conteo[doc.nombre] < 2 && !yaEnDia;
           });
 
           if (disponibles.length > 0) {
-            // Priorizar a quienes lleven menos guardias asignadas
             disponibles.sort((a, b) => conteo[a.nombre] - conteo[b.nombre] || Math.random() - 0.5);
             const elegido = disponibles[0];
             cuadrante[key] = elegido.nombre;
@@ -688,7 +737,6 @@
             const docenteAsignado = cuadrante[`${dia}_${zona}`];
             const hayConflicto = docenteAsignado ? verificarConflictoDia(docenteAsignado, dia) : false;
             
-            // Comprobar si está en su pista de tutoría
             const docObj = docentes.find(d => d.nombre === docenteAsignado);
             const esSuPista = docObj && docObj.tutoria === zona;
 
