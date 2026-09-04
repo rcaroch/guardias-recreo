@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cuadrante de Guardias de Recreo - Curso Escolar</title>
-  <!-- Librería para generar el PDF de forma directa -->
+  <title>Cuadrante de Guardias de Recreo - Centro Escolar</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
@@ -18,6 +17,7 @@
       --success: #15803d;
       --warning: #b45309;
       --danger: #b91c1c;
+      --accent: #7c3aed;
     }
 
     * {
@@ -30,55 +30,55 @@
     body {
       background-color: var(--bg);
       color: var(--text);
-      padding: 20px;
+      padding: 16px;
     }
 
     .container {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
     }
 
     header {
       background: var(--card-bg);
-      padding: 20px 24px;
+      padding: 18px 22px;
       border-radius: 10px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 15px;
+      gap: 12px;
     }
 
     .header-info h1 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: var(--primary);
     }
 
     .header-info p {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
     .toolbar {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     button {
       cursor: pointer;
       border: none;
-      padding: 9px 16px;
+      padding: 8px 14px;
       border-radius: 6px;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .btn-primary { background: var(--primary); color: white; }
@@ -92,79 +92,109 @@
 
     .main-layout {
       display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 20px;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
       align-items: start;
     }
 
-    /* Panel Lateral */
     .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
       background: var(--card-bg);
-      padding: 18px;
+      padding: 16px;
       border-radius: 10px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    .sidebar h2 {
-      font-size: 1.1rem;
-      margin-bottom: 12px;
+    .card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .docente-input-wrap {
+    .input-row {
       display: flex;
       gap: 6px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
-    .docente-input-wrap input {
-      flex: 1;
-      padding: 8px 10px;
+    input[type="text"], select {
+      padding: 6px 10px;
       border: 1px solid var(--border);
       border-radius: 6px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      background: white;
     }
 
-    .docentes-list {
-      max-height: 520px;
+    input[type="text"] { flex: 1; }
+
+    .list-container {
+      max-height: 380px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      padding-right: 4px;
+      padding-right: 3px;
     }
 
-    .docente-item {
+    .list-item {
       background: #f8fafc;
       border: 1px solid var(--border);
-      padding: 7px 10px;
+      padding: 6px 8px;
       border-radius: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.85rem;
+      gap: 6px;
+      font-size: 0.82rem;
+    }
+
+    .docente-draggable {
       cursor: grab;
       user-select: none;
     }
-
-    .docente-item:active { cursor: grabbing; }
+    .docente-draggable:active { cursor: grabbing; }
 
     .badge {
-      font-size: 0.75rem;
-      padding: 2px 7px;
-      border-radius: 12px;
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: 10px;
       font-weight: 700;
+      white-space: nowrap;
     }
     .badge-ok { background: #dcfce7; color: var(--success); }
     .badge-pending { background: #fef3c7; color: var(--warning); }
     .badge-over { background: #fee2e2; color: var(--danger); }
 
-    /* Cuadrante Semanal */
+    .tutoria-select {
+      max-width: 110px;
+      font-size: 0.75rem;
+      padding: 3px 4px;
+      border-color: #cbd5e1;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      font-size: 0.9rem;
+      border-radius: 4px;
+    }
+    .icon-btn:hover { color: var(--danger); background: #fee2e2; }
+    .icon-btn-edit:hover { color: var(--primary); background: #e0f2fe; }
+
+    /* Tabla Cuadrante */
     .schedule-wrapper {
       background: var(--card-bg);
-      padding: 20px;
+      padding: 18px;
       border-radius: 10px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
       overflow-x: auto;
@@ -178,14 +208,14 @@
 
     th, td {
       border: 1px solid var(--border);
-      padding: 10px;
+      padding: 8px;
       vertical-align: top;
     }
 
     th {
       background: #f1f5f9;
       color: #334155;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
@@ -194,13 +224,13 @@
       background: #f8fafc;
       font-weight: 600;
       color: var(--primary);
-      width: 140px;
+      width: 130px;
       vertical-align: middle;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     .drop-zone {
-      min-height: 60px;
+      min-height: 52px;
       background: #ffffff;
       border-radius: 4px;
       transition: background 0.2s;
@@ -216,14 +246,19 @@
       border: 1px solid #bae6fd;
       color: #0369a1;
       border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 0.82rem;
+      padding: 4px 6px;
+      font-size: 0.78rem;
       font-weight: 600;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: grab;
-      margin-top: 2px;
+    }
+
+    .assigned-chip.is-tutor {
+      border-left: 3px solid var(--accent);
+      background: #f5f3ff;
+      color: #5b21b6;
     }
 
     .assigned-chip.conflict {
@@ -232,33 +267,22 @@
       color: var(--danger);
     }
 
-    .chip-del {
-      margin-left: 6px;
-      background: transparent;
-      border: none;
-      color: inherit;
-      cursor: pointer;
-      font-size: 0.95rem;
-      padding: 0 3px;
-    }
-
     .hint-text {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: #94a3b8;
       margin-top: 4px;
       font-style: italic;
     }
 
-    /* Reglas para la impresión limpia */
     @media print {
       body { background: white; padding: 0; }
-      .sidebar, .toolbar, .docente-input-wrap, .chip-del, .hint-text { display: none !important; }
+      .sidebar, .toolbar, .icon-btn, .hint-text { display: none !important; }
       .main-layout { display: block; }
       .schedule-wrapper { box-shadow: none; padding: 0; }
-      table { border-collapse: collapse; width: 100%; font-size: 11pt; }
-      th, td { border: 1px solid #666; padding: 8px; }
+      table { border-collapse: collapse; width: 100%; font-size: 10pt; }
+      th, td { border: 1px solid #666; padding: 6px; }
       .assigned-chip { background: transparent; border: none; color: black; font-weight: bold; }
-      @page { size: landscape; margin: 10mm; }
+      @page { size: landscape; margin: 8mm; }
     }
   </style>
 </head>
@@ -267,8 +291,8 @@
 <div class="container">
   <header>
     <div class="header-info">
-      <h1>Turnos de Guardia de Recreo</h1>
-      <p>Curso Escolar (Septiembre - Junio) • Lunes a Viernes • 2 guardias semanales por docente</p>
+      <h1>Cuadrante de Guardias de Recreo</h1>
+      <p>Curso Escolar (Septiembre - Junio) • 2 guardias semanales por docente con prioridad por tutoría</p>
     </div>
     <div class="toolbar">
       <button class="btn-primary" onclick="autoAsignar()">🪄 Reparto Automático</button>
@@ -279,30 +303,45 @@
   </header>
 
   <div class="main-layout">
-    <!-- Panel Lateral de Docentes -->
+    <!-- Barra Lateral -->
     <aside class="sidebar">
-      <h2>Docentes (<span id="total-docentes">0</span>)</h2>
-      <div class="docente-input-wrap">
-        <input type="text" id="nuevoDocenteNombre" placeholder="Añadir docente..." onkeypress="if(event.key==='Enter') agregarDocente()" />
-        <button class="btn-primary" onclick="agregarDocente()">+</button>
+      
+      <!-- Gestión de Zonas de Guardia -->
+      <div class="card">
+        <h2>Zonas de Guardia (<span id="total-zonas">0</span>)</h2>
+        <div class="input-row">
+          <input type="text" id="nuevaZonaNombre" placeholder="Ej. Pista 3º, Pasillo..." onkeypress="if(event.key==='Enter') agregarZona()" />
+          <button class="btn-outline" onclick="agregarZona()">+ Añadir</button>
+        </div>
+        <div class="list-container" id="zonasList" style="max-height: 170px;"></div>
       </div>
-      <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
-        Arrastra un docente a una casilla para asignarlo.
-      </p>
-      <div class="docentes-list" id="docentesList"></div>
+
+      <!-- Gestión de Docentes y Tutorías -->
+      <div class="card">
+        <h2>Docentes (<span id="total-docentes">0</span>)</h2>
+        <div class="input-row">
+          <input type="text" id="nuevoDocenteNombre" placeholder="Nombre (ej. Pepe)..." onkeypress="if(event.key==='Enter') agregarDocente()" />
+          <button class="btn-primary" onclick="agregarDocente()">+ Añadir</button>
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 6px;">
+          Asigna su tutoría en el desplegable para priorizar su pista:
+        </p>
+        <div class="list-container" id="docentesList"></div>
+      </div>
+
     </aside>
 
-    <!-- Tabla Cuadrante -->
+    <!-- Cuadrante Principal -->
     <main class="schedule-wrapper" id="cuadranteContainer">
-      <div id="pdf-header" style="display:none; margin-bottom: 15px;">
-        <h2 style="font-size: 1.3rem; color: #1e40af;">PLANIFICACIÓN DE GUARDIAS DE RECREO - CURSO ESCOLAR</h2>
-        <p style="font-size: 0.85rem; color: #64748b;">Válido de Septiembre a Junio • Lunes a Viernes</p>
+      <div id="pdf-header" style="display:none; margin-bottom: 12px;">
+        <h2 style="font-size: 1.25rem; color: #1e40af;">PLANIFICACIÓN DE GUARDIAS DE RECREO - CURSO ESCOLAR</h2>
+        <p style="font-size: 0.8rem; color: #64748b;">Turnos fijos de Septiembre a Junio • Lunes a Viernes</p>
       </div>
       
       <table>
         <thead>
           <tr>
-            <th style="width: 150px;">Lugar / Puesto</th>
+            <th style="width: 140px;">Lugar / Puesto</th>
             <th>Lunes</th>
             <th>Martes</th>
             <th>Miércoles</th>
@@ -317,7 +356,9 @@
 </div>
 
 <script>
-  const LUGARES = [
+  const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+
+  const ZONAS_DEFECTO = [
     "Pista 3º",
     "Pista 4º",
     "Pista 5º",
@@ -326,60 +367,150 @@
     "Pasillo"
   ];
 
-  const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
-
-  // 15 docentes de ejemplo (6 puestos x 5 días = 30 guardias; 15 profesores x 2 guardias)
   const DOCENTES_DEFECTO = [
-    "García M.", "Rodríguez L.", "Fernández C.", "López A.",
-    "Martínez S.", "Sánchez P.", "Pérez D.", "Gómez R.",
-    "Martín E.", "Jiménez I.", "Ruiz V.", "Hernández J.",
-    "Díaz F.", "Moreno T.", "Álvarez B."
+    { nombre: "García, M. (Pepe)", tutoria: "Pista 3º" },
+    { nombre: "Rodríguez, L.", tutoria: "Pista 4º" },
+    { nombre: "Fernández, C.", tutoria: "Pista 5º" },
+    { nombre: "López, A.", tutoria: "Pista 6º" },
+    { nombre: "Martínez, S.", tutoria: "" },
+    { nombre: "Sánchez, P.", tutoria: "" },
+    { nombre: "Pérez, D.", tutoria: "" },
+    { nombre: "Gómez, R.", tutoria: "" },
+    { nombre: "Martín, E.", tutoria: "" },
+    { nombre: "Jiménez, I.", tutoria: "" },
+    { nombre: "Ruiz, V.", tutoria: "" },
+    { nombre: "Hernández, J.", tutoria: "" },
+    { nombre: "Díaz, F.", tutoria: "" },
+    { nombre: "Moreno, T.", tutoria: "" },
+    { nombre: "Álvarez, B.", tutoria: "" }
   ];
 
-  let docentes = JSON.parse(localStorage.getItem('guardias_docentes')) || DOCENTES_DEFECTO;
+  // Migración y carga de datos con LocalStorage
+  let zonas = JSON.parse(localStorage.getItem('guardias_zonas')) || ZONAS_DEFECTO;
+  
+  let rawDocentes = JSON.parse(localStorage.getItem('guardias_docentes')) || DOCENTES_DEFECTO;
+  // Si los datos previos guardados eran strings simples, convertirlos a objetos
+  let docentes = rawDocentes.map(d => typeof d === 'string' ? { nombre: d, tutoria: '' } : d);
+
   let cuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
 
-  function guardarDatos() {
+  function guardarTodo() {
+    localStorage.setItem('guardias_zonas', JSON.stringify(zonas));
     localStorage.setItem('guardias_docentes', JSON.stringify(docentes));
     localStorage.setItem('guardias_cuadrante', JSON.stringify(cuadrante));
     render();
   }
 
+  // --- Operaciones de Zonas ---
+  function agregarZona() {
+    const input = document.getElementById('nuevaZonaNombre');
+    const nombre = input.value.trim();
+    if (nombre && !zonas.includes(nombre)) {
+      zonas.push(nombre);
+      input.value = '';
+      guardarTodo();
+    }
+  }
+
+  function editarZona(index) {
+    const zonaActual = zonas[index];
+    const nuevoNombre = prompt(`Editar nombre de la zona:`, zonaActual);
+    if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre.trim() !== zonaActual) {
+      const limpio = nuevoNombre.trim();
+      zonas[index] = limpio;
+
+      // Actualizar turnos asignados a esta zona
+      const nuevoCuadrante = {};
+      for (let key in cuadrante) {
+        const [dia, z] = key.split('_');
+        if (z === zonaActual) {
+          nuevoCuadrante[`${dia}_${limpio}`] = cuadrante[key];
+        } else {
+          nuevoCuadrante[key] = cuadrante[key];
+        }
+      }
+      cuadrante = nuevoCuadrante;
+
+      // Actualizar tutorías vinculadas
+      docentes.forEach(d => {
+        if (d.tutoria === zonaActual) d.tutoria = limpio;
+      });
+
+      guardarTodo();
+    }
+  }
+
+  function eliminarZona(index) {
+    const zonaBorrada = zonas[index];
+    if (confirm(`¿Eliminar la zona "${zonaBorrada}"? Se borrarán sus turnos asignados.`)) {
+      zonas.splice(index, 1);
+      for (let key in cuadrante) {
+        if (key.endsWith(`_${zonaBorrada}`)) delete cuadrante[key];
+      }
+      docentes.forEach(d => {
+        if (d.tutoria === zonaBorrada) d.tutoria = '';
+      });
+      guardarTodo();
+    }
+  }
+
+  // --- Operaciones de Docentes ---
   function agregarDocente() {
     const input = document.getElementById('nuevoDocenteNombre');
     const nombre = input.value.trim();
-    if (nombre && !docentes.includes(nombre)) {
-      docentes.push(nombre);
+    if (nombre && !docentes.some(d => d.nombre === nombre)) {
+      docentes.push({ nombre: nombre, tutoria: '' });
       input.value = '';
-      guardarDatos();
+      guardarTodo();
     }
+  }
+
+  function editarDocenteNombre(index) {
+    const antiguo = docentes[index].nombre;
+    const nuevo = prompt("Modificar nombre del docente:", antiguo);
+    if (nuevo && nuevo.trim() !== "" && nuevo.trim() !== antiguo) {
+      const limpio = nuevo.trim();
+      docentes[index].nombre = limpio;
+      for (let key in cuadrante) {
+        if (cuadrante[key] === antiguo) cuadrante[key] = limpio;
+      }
+      guardarTodo();
+    }
+  }
+
+  function cambiarTutoriaDocente(index, zonaSeleccionada) {
+    docentes[index].tutoria = zonaSeleccionada;
+    guardarTodo();
   }
 
   function eliminarDocente(index) {
-    const borrado = docentes.splice(index, 1)[0];
-    for (let key in cuadrante) {
-      if (cuadrante[key] === borrado) delete cuadrante[key];
+    const borrado = docentes[index].nombre;
+    if (confirm(`¿Eliminar a "${borrado}" de la lista?`)) {
+      docentes.splice(index, 1);
+      for (let key in cuadrante) {
+        if (cuadrante[key] === borrado) delete cuadrante[key];
+      }
+      guardarTodo();
     }
-    guardarDatos();
   }
 
-  function contarGuardias(docente) {
-    let count = 0;
+  function contarGuardias(nombreDocente) {
+    let c = 0;
     for (let key in cuadrante) {
-      if (cuadrante[key] === docente) count++;
+      if (cuadrante[key] === nombreDocente) c++;
     }
-    return count;
+    return c;
   }
 
-  function verificarConflictoDia(docente, dia) {
-    let vecesHoy = 0;
-    LUGARES.forEach(lugar => {
-      if (cuadrante[`${dia}_${lugar}`] === docente) vecesHoy++;
+  function verificarConflictoDia(nombreDocente, dia) {
+    let veces = 0;
+    zonas.forEach(z => {
+      if (cuadrante[`${dia}_${z}`] === nombreDocente) veces++;
     });
-    return vecesHoy > 1;
+    return veces > 1;
   }
 
-  // --- Drag and Drop ---
+  // --- Arrastrar y Soltar (Drag & Drop) ---
   let draggedData = null;
 
   function onDragStartDocente(e, nombre) {
@@ -387,8 +518,8 @@
     e.dataTransfer.setData('text/plain', JSON.stringify(draggedData));
   }
 
-  function onDragStartSlot(e, dia, lugar, nombre) {
-    draggedData = { type: 'slot', dia: dia, lugar: lugar, nombre: nombre };
+  function onDragStartSlot(e, dia, zona, nombre) {
+    draggedData = { type: 'slot', dia: dia, zona: zona, nombre: nombre };
     e.dataTransfer.setData('text/plain', JSON.stringify(draggedData));
   }
 
@@ -401,63 +532,87 @@
     e.currentTarget.classList.remove('drag-over');
   }
 
-  function onDropSlot(e, diaDestino, lugarDestino) {
+  function onDropSlot(e, diaDestino, zonaDestino) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     if (!draggedData) return;
 
-    const slotDestinoKey = `${diaDestino}_${lugarDestino}`;
-    const docenteDestinoActual = cuadrante[slotDestinoKey];
+    const destinoKey = `${diaDestino}_${zonaDestino}`;
+    const docenteDestinoActual = cuadrante[destinoKey];
 
     if (draggedData.type === 'docente') {
-      cuadrante[slotDestinoKey] = draggedData.nombre;
+      cuadrante[destinoKey] = draggedData.nombre;
     } else if (draggedData.type === 'slot') {
-      const slotOrigenKey = `${draggedData.dia}_${draggedData.lugar}`;
-      cuadrante[slotDestinoKey] = draggedData.nombre;
+      const origenKey = `${draggedData.dia}_${draggedData.zona}`;
+      cuadrante[destinoKey] = draggedData.nombre;
       if (docenteDestinoActual) {
-        cuadrante[slotOrigenKey] = docenteDestinoActual; // Intercambiar
+        cuadrante[origenKey] = docenteDestinoActual; // Intercambio
       } else {
-        delete cuadrante[slotOrigenKey]; // Mover
+        delete cuadrante[origenKey]; // Movimiento
       }
     }
     draggedData = null;
-    guardarDatos();
+    guardarTodo();
   }
 
-  function quitarAsignacion(dia, lugar) {
-    delete cuadrante[`${dia}_${lugar}`];
-    guardarDatos();
+  function quitarAsignacion(dia, zona) {
+    delete cuadrante[`${dia}_${zona}`];
+    guardarTodo();
   }
 
   function limpiarCuadrante() {
-    if (confirm("¿Vaciar todos los turnos asignados en la tabla?")) {
+    if (confirm("¿Vaciar todas las asignaciones del cuadrante?")) {
       cuadrante = {};
-      guardarDatos();
+      guardarTodo();
     }
   }
 
+  // --- Algoritmo de Reparto Automático con Prioridad de Tutorías ---
   function autoAsignar() {
     cuadrante = {};
     const conteo = {};
-    docentes.forEach(d => conteo[d] = 0);
+    docentes.forEach(d => conteo[d.nombre] = 0);
 
+    // FASE 1: Prioridad absoluta para tutores en su propia pista
+    docentes.forEach(doc => {
+      if (doc.tutoria && zonas.includes(doc.tutoria)) {
+        // Asignar hasta 2 días en su pista correspondiente
+        const diasDisponibles = [...DIAS].sort(() => Math.random() - 0.5);
+        for (let dia of diasDisponibles) {
+          const key = `${dia}_${doc.tutoria}`;
+          const yaEnDia = zonas.some(z => cuadrante[`${dia}_${z}`] === doc.nombre);
+          if (!cuadrante[key] && !yaEnDia && conteo[doc.nombre] < 2) {
+            cuadrante[key] = doc.nombre;
+            conteo[doc.nombre]++;
+          }
+          if (conteo[doc.nombre] >= 2) break;
+        }
+      }
+    });
+
+    // FASE 2: Rellenar los huecos restantes equitativamente
     DIAS.forEach(dia => {
-      LUGARES.forEach(lugar => {
-        const disponibles = docentes.filter(doc => {
-          const yaHoy = LUGARES.some(l => cuadrante[`${dia}_${l}`] === doc);
-          return conteo[doc] < 2 && !yaHoy;
-        });
+      zonas.forEach(zona => {
+        const key = `${dia}_${zona}`;
+        if (!cuadrante[key]) {
+          // Candidatos disponibles: < 2 guardias y que no estén hoy de guardia
+          const disponibles = docentes.filter(doc => {
+            const yaEnDia = zonas.some(z => cuadrante[`${dia}_${z}`] === doc.nombre);
+            return conteo[doc.nombre] < 2 && !yaEnDia;
+          });
 
-        if (disponibles.length > 0) {
-          disponibles.sort((a, b) => conteo[a] - conteo[b] || Math.random() - 0.5);
-          const elegido = disponibles[0];
-          cuadrante[`${dia}_${lugar}`] = elegido;
-          conteo[elegido]++;
+          if (disponibles.length > 0) {
+            // Priorizar a quienes lleven menos guardias asignadas
+            disponibles.sort((a, b) => conteo[a.nombre] - conteo[b.nombre] || Math.random() - 0.5);
+            const elegido = disponibles[0];
+            cuadrante[key] = elegido.nombre;
+            conteo[elegido.nombre]++;
+          }
         }
       });
     });
 
-    guardarDatos();
+    guardarTodo();
   }
 
   function exportarPDF() {
@@ -478,49 +633,77 @@
     });
   }
 
+  // --- Renderizado de Interfaz ---
   function render() {
-    // 1. Docentes
+    // 1. Zonas
+    document.getElementById('total-zonas').textContent = zonas.length;
+    const zonasList = document.getElementById('zonasList');
+    zonasList.innerHTML = zonas.map((z, idx) => `
+      <div class="list-item">
+        <span style="font-weight:600; color:var(--primary);">${z}</span>
+        <div>
+          <button class="icon-btn icon-btn-edit" onclick="editarZona(${idx})" title="Renombrar zona">✏️</button>
+          <button class="icon-btn" onclick="eliminarZona(${idx})" title="Eliminar zona">&times;</button>
+        </div>
+      </div>
+    `).join('');
+
+    // 2. Docentes
     document.getElementById('total-docentes').textContent = docentes.length;
-    const listaDoc = document.getElementById('docentesList');
-    listaDoc.innerHTML = docentes.map((doc, idx) => {
-      const cant = contarGuardias(doc);
+    const docentesList = document.getElementById('docentesList');
+    docentesList.innerHTML = docentes.map((doc, idx) => {
+      const cant = contarGuardias(doc.nombre);
       let badgeClass = 'badge-pending';
       if (cant === 2) badgeClass = 'badge-ok';
       if (cant > 2) badgeClass = 'badge-over';
 
+      const opcionesTutoria = `
+        <option value="">Sin tutoría</option>
+        ${zonas.map(z => `<option value="${z}" ${doc.tutoria === z ? 'selected' : ''}>${z}</option>`).join('')}
+      `;
+
       return `
-        <div class="docente-item" draggable="true" ondragstart="onDragStartDocente(event, '${doc}')">
-          <span style="font-weight:500;">${doc}</span>
-          <div style="display:flex; align-items:center; gap:6px;">
+        <div class="list-item docente-draggable" draggable="true" ondragstart="onDragStartDocente(event, '${doc.nombre}')">
+          <span style="font-weight:500; cursor:pointer;" onclick="editarDocenteNombre(${idx})" title="Clic para renombrar">
+            ${doc.nombre}
+          </span>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <select class="tutoria-select" onchange="cambiarTutoriaDocente(${idx}, this.value)" title="Asignar pista prioritaria">
+              ${opcionesTutoria}
+            </select>
             <span class="badge ${badgeClass}">${cant}/2</span>
-            <button class="chip-del" onclick="eliminarDocente(${idx})" title="Eliminar docente">&times;</button>
+            <button class="icon-btn" onclick="eliminarDocente(${idx})" title="Eliminar docente">&times;</button>
           </div>
         </div>
       `;
     }).join('');
 
-    // 2. Cuadrante
+    // 3. Tabla Cuadrante
     const tablaBody = document.getElementById('tablaBody');
-    tablaBody.innerHTML = LUGARES.map(lugar => {
+    tablaBody.innerHTML = zonas.map(zona => {
       return `
         <tr>
-          <td class="location-cell">${lugar}</td>
+          <td class="location-cell">${zona}</td>
           ${DIAS.map(dia => {
-            const docente = cuadrante[`${dia}_${lugar}`];
-            const hayConflicto = docente ? verificarConflictoDia(docente, dia) : false;
+            const docenteAsignado = cuadrante[`${dia}_${zona}`];
+            const hayConflicto = docenteAsignado ? verificarConflictoDia(docenteAsignado, dia) : false;
             
+            // Comprobar si está en su pista de tutoría
+            const docObj = docentes.find(d => d.nombre === docenteAsignado);
+            const esSuPista = docObj && docObj.tutoria === zona;
+
             return `
               <td class="drop-zone" 
                   ondragover="allowDrop(event)" 
                   ondragleave="onDragLeave(event)" 
-                  ondrop="onDropSlot(event, '${dia}', '${lugar}')">
-                ${docente ? `
-                  <div class="assigned-chip ${hayConflicto ? 'conflict' : ''}" 
+                  ondrop="onDropSlot(event, '${dia}', '${zona}')">
+                ${docenteAsignado ? `
+                  <div class="assigned-chip ${hayConflicto ? 'conflict' : ''} ${esSuPista ? 'is-tutor' : ''}" 
                        draggable="true" 
-                       ondragstart="onDragStartSlot(event, '${dia}', '${lugar}', '${docente}')"
-                       title="${hayConflicto ? '¡Atención! Este docente tiene 2 puestos el mismo día' : 'Arrastra para mover o intercambiar'}">
-                    <span>${docente} ${hayConflicto ? '⚠️' : ''}</span>
-                    <button class="chip-del" onclick="quitarAsignacion('${dia}', '${lugar}')">&times;</button>
+                       ondragstart="onDragStartSlot(event, '${dia}', '${zona}', '${docenteAsignado}')"
+                       title="${hayConflicto ? '¡Atención! 2 guardias el mismo día' : (esSuPista ? 'Asignado en su pista de tutoría' : 'Arrastra para mover')}">
+                    <span>${docenteAsignado} ${esSuPista ? '⭐' : ''} ${hayConflicto ? '⚠️' : ''}</span>
+                    <button class="icon-btn" style="padding:0 2px;" onclick="quitarAsignacion('${dia}', '${zona}')">&times;</button>
                   </div>
                 ` : `<div class="hint-text">Arrastra aquí</div>`}
               </td>
@@ -531,6 +714,7 @@
     }).join('');
   }
 
+  // Carga inicial
   render();
 </script>
 </body>
