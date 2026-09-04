@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cuadrante de Guardias de Recreo - Centro Escolar</title>
-  <!-- Librería para exportar directamente a PDF -->
+  <!-- Librería html2pdf para exportar a PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
@@ -35,7 +35,7 @@
     }
 
     .container {
-      max-width: 1480px;
+      max-width: 1520px;
       margin: 0 auto;
     }
 
@@ -55,6 +55,18 @@
     .header-info h1 {
       font-size: 1.4rem;
       color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .version-tag {
+      font-size: 0.72rem;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
     }
 
     .header-info p {
@@ -93,7 +105,7 @@
 
     .main-layout {
       display: grid;
-      grid-template-columns: 390px 1fr;
+      grid-template-columns: 400px 1fr;
       gap: 18px;
       align-items: start;
     }
@@ -136,7 +148,7 @@
     input[type="text"] { flex: 1; }
 
     .list-container {
-      max-height: 400px;
+      max-height: 420px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -176,14 +188,14 @@
     .badge-over { background: #fee2e2; color: var(--danger); }
 
     .tutoria-select {
-      max-width: 95px;
+      max-width: 100px;
       font-size: 0.75rem;
       padding: 3px 4px;
       border-color: #cbd5e1;
     }
 
     .small-num-input {
-      width: 42px;
+      width: 44px;
       padding: 3px 2px;
       font-size: 0.75rem;
       font-weight: 700;
@@ -203,7 +215,7 @@
     .icon-btn:hover { color: var(--danger); background: #fee2e2; }
     .icon-btn-edit:hover { color: var(--primary); background: #e0f2fe; }
 
-    /* Tabla Cuadrante */
+    /* Estilos del Cuadrante */
     .schedule-wrapper {
       background: var(--card-bg);
       padding: 18px;
@@ -216,6 +228,7 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
+      table-layout: fixed; /* Asegura un 17% idéntico para cada día */
     }
 
     th, td {
@@ -232,28 +245,32 @@
       letter-spacing: 0.04em;
     }
 
+    th.col-lugar, td.location-cell {
+      width: 15%;
+    }
+
+    th.col-dia, td.drop-zone {
+      width: 17%;
+    }
+
     .location-cell {
       background: #f8fafc;
       font-weight: 600;
       color: var(--primary);
-      width: 140px;
       vertical-align: middle;
       font-size: 0.85rem;
     }
 
-    .drop-zone {
-      min-height: 64px;
-      background: #ffffff;
-      border-radius: 4px;
-      transition: background 0.2s;
+    .cell-content {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
+      min-height: 60px;
     }
 
     .drop-zone.drag-over {
       background: #eff6ff;
-      border: 2px dashed var(--primary-light);
+      outline: 2px dashed var(--primary-light);
     }
 
     .assigned-chip {
@@ -297,8 +314,8 @@
       .sidebar, .toolbar, .icon-btn, .slot-placeholder { display: none !important; }
       .main-layout { display: block; }
       .schedule-wrapper { box-shadow: none; padding: 0; }
-      table { border-collapse: collapse; width: 100%; font-size: 9.5pt; }
-      th, td { border: 1px solid #666; padding: 5px; }
+      table { border-collapse: collapse; width: 100%; font-size: 9pt; table-layout: fixed; }
+      th, td { border: 1px solid #666; padding: 4px; }
       .assigned-chip { background: transparent; border: none; color: black; font-weight: bold; padding: 1px 0; }
       @page { size: landscape; margin: 8mm; }
     }
@@ -309,8 +326,11 @@
 <div class="container">
   <header>
     <div class="header-info">
-      <h1>Cuadrante de Guardias de Recreo</h1>
-      <p>Curso Escolar (Septiembre - Junio) • Zonas con múltiples docentes simultáneos y prioridad por tutoría</p>
+      <h1>
+        Cuadrante de Guardias de Recreo
+        <span class="version-tag">v4.5 - Reparto Equitativo</span>
+      </h1>
+      <p>Curso Escolar (Septiembre - Junio) • Puestos con múltiples docentes y prioridad de tutoría</p>
     </div>
     <div class="toolbar">
       <button class="btn-primary" onclick="autoAsignar()">🪄 Reparto Automático</button>
@@ -322,7 +342,7 @@
       <button class="btn-outline" onclick="document.getElementById('inputImportar').click()" title="Cargar archivo de copia de seguridad">📂 Cargar Copia</button>
       <input type="file" id="inputImportar" accept=".json" style="display:none;" onchange="importarCopiaSeguridad(event)" />
       
-      <button class="btn-danger" onclick="limpiarCuadrante()">🗑️ Vaciar</button>
+      <button class="btn-danger" onclick="limpiarCuadrante()">🗑️ Vaciar Cuadrante</button>
     </div>
   </header>
 
@@ -335,12 +355,12 @@
         <h2>Zonas de Guardia (<span id="total-zonas">0</span>)</h2>
         <div class="input-row">
           <input type="text" id="nuevaZonaNombre" placeholder="Nombre (ej. Pista 3º)..." onkeypress="if(event.key==='Enter') agregarZona()" />
-          <input type="number" id="nuevaZonaCapacidad" value="1" min="1" max="5" title="Docentes simultáneos en esta zona" style="width: 44px; text-align: center;" />
+          <input type="number" id="nuevaZonaCapacidad" value="1" min="1" max="5" title="Docentes a la vez en esta zona" style="width: 44px; text-align: center;" />
           <button class="btn-outline" onclick="agregarZona()">+ Añadir</button>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; padding:0 4px;">
           <span>Zona</span>
-          <span>Docentes a la vez / Acciones</span>
+          <span>Docentes simultáneos / Acciones</span>
         </div>
         <div class="list-container" id="zonasList" style="max-height: 180px;"></div>
       </div>
@@ -354,7 +374,7 @@
         
         <div class="input-row">
           <input type="text" id="nuevoDocenteNombre" placeholder="Nombre (ej. Pepe)..." onkeypress="if(event.key==='Enter') agregarDocente()" />
-          <input type="number" id="nuevoDocenteGuardias" value="2" min="0" max="10" title="Guardias semanales" style="width: 44px; text-align: center;" />
+          <input type="number" id="nuevoDocenteGuardias" value="2" min="0" max="10" title="Guardias semanales asignadas" style="width: 44px; text-align: center;" />
           <button class="btn-primary" onclick="agregarDocente()">+ Añadir</button>
         </div>
 
@@ -378,12 +398,12 @@
       <table>
         <thead>
           <tr>
-            <th style="width: 150px;">Lugar / Puesto</th>
-            <th>Lunes</th>
-            <th>Martes</th>
-            <th>Miércoles</th>
-            <th>Jueves</th>
-            <th>Viernes</th>
+            <th class="col-lugar">Lugar / Puesto</th>
+            <th class="col-dia">Lunes</th>
+            <th class="col-dia">Martes</th>
+            <th class="col-dia">Miércoles</th>
+            <th class="col-dia">Jueves</th>
+            <th class="col-dia">Viernes</th>
           </tr>
         </thead>
         <tbody id="tablaBody"></tbody>
@@ -395,6 +415,7 @@
 <script>
   const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
+  // Configuración por defecto: Pista 3º con 2 docentes simultáneos
   const ZONAS_DEFECTO = [
     { nombre: "Pista 3º", capacidad: 2 },
     { nombre: "Pista 4º", capacidad: 1 },
@@ -444,7 +465,7 @@
     };
   });
 
-  // Carga y normalización de Cuadrante
+  // Carga y saneamiento de Cuadrante
   let rawCuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
   let cuadrante = {};
   for (let key in rawCuadrante) {
@@ -464,10 +485,117 @@
     render();
   }
 
+  // --- Función de Barajado Matemático (Fisher-Yates) ---
+  function barajar(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // --- Algoritmo de Reparto Automático Equitativo ---
+  function autoAsignar() {
+    cuadrante = {};
+    const conteoDocente = {};
+    const docenteDias = {}; // Registro de días que trabaja cada docente (máximo 1 por día)
+
+    docentes.forEach(d => {
+      conteoDocente[d.nombre] = 0;
+      docenteDias[d.nombre] = new Set();
+    });
+
+    // 1. Inicializar todas las casillas vacías de lunes a viernes
+    DIAS.forEach(dia => {
+      zonas.forEach(z => {
+        cuadrante[`${dia}_${z.nombre}`] = [];
+      });
+    });
+
+    // 2. FASE 1: Prioridad de Tutores en su propia zona repartidos en días diferentes
+    docentes.forEach(doc => {
+      const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
+      const zonaObj = zonas.find(z => z.nombre === doc.tutoria);
+
+      if (zonaObj && maxG > 0) {
+        const objetivoTutor = Math.min(maxG, 2);
+        const diasAleatorios = barajar(DIAS);
+
+        for (let dia of diasAleatorios) {
+          const key = `${dia}_${zonaObj.nombre}`;
+          const yaOcupadoHoy = docenteDias[doc.nombre].has(dia);
+          const huecoDisponible = cuadrante[key].length < zonaObj.capacidad;
+
+          if (huecoDisponible && !yaOcupadoHoy && conteoDocente[doc.nombre] < objetivoTutor) {
+            cuadrante[key].push(doc.nombre);
+            conteoDocente[doc.nombre]++;
+            docenteDias[doc.nombre].add(dia);
+          }
+
+          if (conteoDocente[doc.nombre] >= objetivoTutor) break;
+        }
+      }
+    });
+
+    // 3. FASE 2: Recopilar todos los huecos libres de toda la semana
+    const huecosRestantes = [];
+    DIAS.forEach(dia => {
+      zonas.forEach(z => {
+        const asignados = cuadrante[`${dia}_${z.nombre}`].length;
+        for (let i = asignados; i < z.capacidad; i++) {
+          huecosRestantes.push({ dia: dia, zona: z.nombre });
+        }
+      });
+    });
+
+    // Barajar completamente los huecos para repartir equilibradamente entre todos los días
+    const huecosMezclados = barajar(huecosRestantes);
+
+    // 4. Asignar los puestos libres priorizando a quien le faltan más guardias por cumplir
+    huecosMezclados.forEach(hueco => {
+      const key = `${hueco.dia}_${hueco.zona}`;
+
+      const candidatos = docentes.filter(doc => {
+        const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
+        const noLlegoAlMaximo = conteoDocente[doc.nombre] < maxG;
+        const noEstaHoy = !docenteDias[doc.nombre].has(hueco.dia);
+        return noLlegoAlMaximo && noEstaHoy;
+      });
+
+      if (candidatos.length > 0) {
+        // Ordenar primero a quienes tienen más turnos pendientes por hacer
+        candidatos.sort((a, b) => {
+          const pendA = (a.maxGuardias !== undefined ? a.maxGuardias : 2) - conteoDocente[a.nombre];
+          const pendB = (b.maxGuardias !== undefined ? b.maxGuardias : 2) - conteoDocente[b.nombre];
+          return (pendB - pendA) || (Math.random() - 0.5);
+        });
+
+        const elegido = candidatos[0];
+        cuadrante[key].push(elegido.nombre);
+        conteoDocente[elegido.nombre]++;
+        docenteDias[elegido.nombre].add(hueco.dia);
+      }
+    });
+
+    guardarTodo();
+
+    // 5. Informe de balance diario para verificar en pantalla
+    const desglose = DIAS.map(d => {
+      let turnosDia = 0;
+      zonas.forEach(z => {
+        turnosDia += (cuadrante[`${d}_${z.nombre}`] || []).length;
+      });
+      return `• ${d}: ${turnosDia} guardias`;
+    }).join('\n');
+
+    alert(`✅ ¡Reparto equilibrado realizado con éxito!\n\n${desglose}`);
+  }
+
   // --- Copia de Seguridad ---
   function exportarCopiaSeguridad() {
     const backupData = {
-      version: 3,
+      version: 4,
       fecha: new Date().toLocaleDateString('es-ES'),
       zonas: zonas,
       docentes: docentes,
@@ -517,7 +645,7 @@
     reader.readAsText(file);
   }
 
-  // --- Operaciones de Zonas ---
+  // --- Gestión de Zonas ---
   function agregarZona() {
     const inputNombre = document.getElementById('nuevaZonaNombre');
     const inputCap = document.getElementById('nuevaZonaCapacidad');
@@ -579,7 +707,7 @@
     }
   }
 
-  // --- Operaciones de Docentes ---
+  // --- Gestión de Docentes ---
   function agregarDocente() {
     const inputNombre = document.getElementById('nuevoDocenteNombre');
     const inputGuardias = document.getElementById('nuevoDocenteGuardias');
@@ -678,7 +806,8 @@
     if (!draggedData) return;
 
     const destKey = `${diaDestino}_${zonaDestino}`;
-    const targetList = cuadrante[destKey] || [];
+    if (!cuadrante[destKey]) cuadrante[destKey] = [];
+    const targetList = cuadrante[destKey];
     const zonaObj = zonas.find(z => z.nombre === zonaDestino);
     const maxCap = zonaObj ? zonaObj.capacidad : 1;
 
@@ -691,7 +820,6 @@
         alert(`Este puesto (${zonaDestino}) ya tiene el cupo completo (${maxCap} docentes simultáneos).`);
       } else {
         targetList.push(draggedData.nombre);
-        cuadrante[destKey] = targetList;
       }
     } else if (draggedData.type === 'slot') {
       const origKey = `${draggedData.dia}_${draggedData.zona}`;
@@ -703,13 +831,12 @@
       if (targetList.length < maxCap) {
         cuadrante[origKey] = (cuadrante[origKey] || []).filter(n => n !== draggedData.nombre);
         targetList.push(draggedData.nombre);
-        cuadrante[destKey] = targetList;
       } else {
+        // Intercambio automático
         const desplazado = targetList.pop();
-        targetList.push(draggedData.nombre);
         cuadrante[origKey] = (cuadrante[origKey] || []).filter(n => n !== draggedData.nombre);
         cuadrante[origKey].push(desplazado);
-        cuadrante[destKey] = targetList;
+        targetList.push(draggedData.nombre);
       }
     }
 
@@ -728,85 +855,6 @@
       cuadrante = {};
       guardarTodo();
     }
-  }
-
-  // --- Algoritmo de Reparto Automático Equitativo y Balanceado ---
-  function autoAsignar() {
-    cuadrante = {};
-    const conteo = {};
-    docentes.forEach(d => conteo[d.nombre] = 0);
-
-    // 1. Inicializar todas las casillas vacías de lunes a viernes
-    DIAS.forEach(dia => {
-      zonas.forEach(z => {
-        cuadrante[`${dia}_${z.nombre}`] = [];
-      });
-    });
-
-    // 2. FASE 1: Asignar tutores a su pista en días diferentes y repartidos
-    docentes.forEach(doc => {
-      const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
-      const zonaObj = zonas.find(z => z.nombre === doc.tutoria);
-      
-      if (zonaObj && maxG > 0) {
-        const cupoTutor = Math.min(maxG, 2);
-        // Barajar días para no concentrar tutores siempre en lunes
-        const diasMezclados = [...DIAS].sort(() => Math.random() - 0.5);
-        
-        for (let dia of diasMezclados) {
-          const key = `${dia}_${zonaObj.nombre}`;
-          const yaEnDia = zonas.some(z => (cuadrante[`${dia}_${z.nombre}`] || []).includes(doc.nombre));
-          
-          if (cuadrante[key].length < zonaObj.capacidad && !yaEnDia && conteo[doc.nombre] < cupoTutor) {
-            cuadrante[key].push(doc.nombre);
-            conteo[doc.nombre]++;
-          }
-          if (conteo[doc.nombre] >= cupoTutor) break;
-        }
-      }
-    });
-
-    // 3. FASE 2: Recopilar todos los huecos libres de toda la semana
-    const huecosPendientes = [];
-    DIAS.forEach(dia => {
-      zonas.forEach(z => {
-        const asignadosActuales = (cuadrante[`${dia}_${z.nombre}`] || []).length;
-        for (let i = asignadosActuales; i < z.capacidad; i++) {
-          huecosPendientes.push({ dia: dia, zona: z.nombre });
-        }
-      });
-    });
-
-    // Barajar los huecos para distribuir homogéneamente por todos los días (evita acumulación en lunes)
-    huecosPendientes.sort(() => Math.random() - 0.5);
-
-    // 4. Asignar los puestos libres con prioridad para docentes con más guardias pendientes
-    huecosPendientes.forEach(hueco => {
-      const key = `${hueco.dia}_${hueco.zona}`;
-      
-      const candidatos = docentes.filter(d => {
-        const maxG = d.maxGuardias !== undefined ? d.maxGuardias : 2;
-        if (conteo[d.nombre] >= maxG) return false;
-        // Impedir repetir docente en el mismo día
-        const yaEnDia = zonas.some(z => (cuadrante[`${hueco.dia}_${z.nombre}`] || []).includes(d.nombre));
-        return !yaEnDia;
-      });
-
-      if (candidatos.length > 0) {
-        // Ordenar primero a quienes tienen más guardias pendientes por cumplir
-        candidatos.sort((a, b) => {
-          const pendA = (a.maxGuardias !== undefined ? a.maxGuardias : 2) - conteo[a.nombre];
-          const pendB = (b.maxGuardias !== undefined ? b.maxGuardias : 2) - conteo[b.nombre];
-          return (pendB - pendA) || (Math.random() - 0.5);
-        });
-
-        const elegido = candidatos[0];
-        cuadrante[key].push(elegido.nombre);
-        conteo[elegido.nombre]++;
-      }
-    });
-
-    guardarTodo();
   }
 
   function exportarPDF() {
@@ -838,8 +886,8 @@
           ${z.nombre}
         </span>
         <div style="display:flex; align-items:center; gap:4px;">
-          <span title="Docentes simultáneos en esta zona" style="font-size:0.75rem;">👥</span>
-          <input type="number" class="small-num-input" min="1" max="5" value="${z.capacidad}" onchange="cambiarCapacidadZona(${idx}, this.value)" title="Número de docentes simultáneos" />
+          <span title="Docentes a la vez en esta zona" style="font-size:0.75rem;">👥</span>
+          <input type="number" class="small-num-input" min="1" max="5" value="${z.capacidad}" onchange="cambiarCapacidadZona(${idx}, this.value)" title="Docentes simultáneos" />
           <button class="icon-btn icon-btn-edit" onclick="editarZona(${idx})" title="Renombrar">✏️</button>
           <button class="icon-btn" onclick="eliminarZona(${idx})" title="Eliminar">&times;</button>
         </div>
@@ -875,7 +923,7 @@
             ${doc.nombre}
           </span>
           <div style="display:flex; align-items:center; gap:4px;">
-            <select class="tutoria-select" onchange="cambiarTutoriaDocente(${idx}, this.value)" title="Zona de tutoría prioritaria">
+            <select class="tutoria-select" onchange="cambiarTutoriaDocente(${idx}, this.value)" title="Zona prioritaria de tutoría">
               ${opcionesTutoria}
             </select>
             <input type="number" class="small-num-input" min="0" max="10" value="${maxG}" onchange="cambiarMaxGuardias(${idx}, this.value)" title="Guardias semanales asignadas" />
@@ -907,27 +955,29 @@
                   ondragleave="onDragLeave(event)" 
                   ondrop="onDropSlot(event, '${dia}', '${zona.nombre}')">
                 
-                ${asignados.map(nombreDocente => {
-                  const hayConflicto = verificarConflictoDia(nombreDocente, dia);
-                  const docObj = docentes.find(d => d.nombre === nombreDocente);
-                  const esSuPista = docObj && docObj.tutoria === zona.nombre;
+                <div class="cell-content">
+                  ${asignados.map(nombreDocente => {
+                    const hayConflicto = verificarConflictoDia(nombreDocente, dia);
+                    const docObj = docentes.find(d => d.nombre === nombreDocente);
+                    const esSuPista = docObj && docObj.tutoria === zona.nombre;
 
-                  return `
-                    <div class="assigned-chip ${hayConflicto ? 'conflict' : ''} ${esSuPista ? 'is-tutor' : ''}" 
-                         draggable="true" 
-                         ondragstart="onDragStartSlot(event, '${dia}', '${zona.nombre}', '${nombreDocente}')"
-                         title="${hayConflicto ? '¡Atención! Este docente tiene 2 guardias el mismo día' : (esSuPista ? 'Asignado en su tutoría' : 'Arrastra para mover o intercambiar')}">
-                      <span>${nombreDocente} ${esSuPista ? '⭐' : ''} ${hayConflicto ? '⚠️' : ''}</span>
-                      <button class="icon-btn" style="padding:0 2px;" onclick="quitarAsignacion('${dia}', '${zona.nombre}', '${nombreDocente}')">&times;</button>
+                    return `
+                      <div class="assigned-chip ${hayConflicto ? 'conflict' : ''} ${esSuPista ? 'is-tutor' : ''}" 
+                           draggable="true" 
+                           ondragstart="onDragStartSlot(event, '${dia}', '${zona.nombre}', '${nombreDocente}')"
+                           title="${hayConflicto ? '¡Atención! Este docente tiene 2 guardias el mismo día' : (esSuPista ? 'Asignado en su tutoría' : 'Arrastra para mover o intercambiar')}">
+                        <span>${nombreDocente} ${esSuPista ? '⭐' : ''} ${hayConflicto ? '⚠️' : ''}</span>
+                        <button class="icon-btn" style="padding:0 2px;" onclick="quitarAsignacion('${dia}', '${zona.nombre}', '${nombreDocente}')">&times;</button>
+                      </div>
+                    `;
+                  }).join('')}
+
+                  ${asignados.length < zona.capacidad ? `
+                    <div class="slot-placeholder">
+                      + Libre (${asignados.length}/${zona.capacidad})
                     </div>
-                  `;
-                }).join('')}
-
-                ${asignados.length < zona.capacidad ? `
-                  <div class="slot-placeholder">
-                    + Hueco libre (${asignados.length}/${zona.capacidad})
-                  </div>
-                ` : ''}
+                  ` : ''}
+                </div>
 
               </td>
             `;
@@ -937,7 +987,7 @@
     }).join('');
   }
 
-  // Carga inicial
+  // Inicialización
   render();
 </script>
 </body>
