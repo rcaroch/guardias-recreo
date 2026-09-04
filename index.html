@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cuadrante de Guardias de Recreo - Curso Escolar</title>
+  <!-- Librería para generar el PDF de forma directa -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --success: #15803d;
+      --warning: #b45309;
+      --danger: #b91c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: var(--card-bg);
+      padding: 20px 24px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-info h1 {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .header-info p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #166534; }
+    .btn-danger { background: #fee2e2; color: var(--danger); }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f1f5f9; }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Panel Lateral */
+    .sidebar {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .sidebar h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .docente-input-wrap {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .docente-input-wrap input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .docentes-list {
+      max-height: 520px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .docente-item {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 7px 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .docente-item:active { cursor: grabbing; }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .badge-ok { background: #dcfce7; color: var(--success); }
+    .badge-pending { background: #fef3c7; color: var(--warning); }
+    .badge-over { background: #fee2e2; color: var(--danger); }
+
+    /* Cuadrante Semanal */
+    .schedule-wrapper {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .location-cell {
+      background: #f8fafc;
+      font-weight: 600;
+      color: var(--primary);
+      width: 140px;
+      vertical-align: middle;
+      font-size: 0.9rem;
+    }
+
+    .drop-zone {
+      min-height: 60px;
+      background: #ffffff;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .drop-zone.drag-over {
+      background: #eff6ff;
+      border: 2px dashed var(--primary-light);
+    }
+
+    .assigned-chip {
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      color: #0369a1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: grab;
+      margin-top: 2px;
+    }
+
+    .assigned-chip.conflict {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: var(--danger);
+    }
+
+    .chip-del {
+      margin-left: 6px;
+      background: transparent;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 0 3px;
+    }
+
+    .hint-text {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    /* Reglas para la impresión limpia */
+    @media print {
+      body { background: white; padding: 0; }
+      .sidebar, .toolbar, .docente-input-wrap, .chip-del, .hint-text { display: none !important; }
+      .main-layout { display: block; }
+      .schedule-wrapper { box-shadow: none; padding: 0; }
+      table { border-collapse: collapse; width: 100%; font-size: 11pt; }
+      th, td { border: 1px solid #666; padding: 8px; }
+      .assigned-chip { background: transparent; border: none; color: black; font-weight: bold; }
+      @page { size: landscape; margin: 10mm; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-info">
+      <h1>Turnos de Guardia de Recreo</h1>
+      <p>Curso Escolar (Septiembre - Junio) • Lunes a Viernes • 2 guardias semanales por docente</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="autoAsignar()">🪄 Reparto Automático</button>
+      <button class="btn-success" onclick="exportarPDF()">📄 Descargar PDF</button>
+      <button class="btn-outline" onclick="window.print()">🖨️ Imprimir</button>
+      <button class="btn-danger" onclick="limpiarCuadrante()">🗑️ Vaciar</button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <!-- Panel Lateral de Docentes -->
+    <aside class="sidebar">
+      <h2>Docentes (<span id="total-docentes">0</span>)</h2>
+      <div class="docente-input-wrap">
+        <input type="text" id="nuevoDocenteNombre" placeholder="Añadir docente..." onkeypress="if(event.key==='Enter') agregarDocente()" />
+        <button class="btn-primary" onclick="agregarDocente()">+</button>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+        Arrastra un docente a una casilla para asignarlo.
+      </p>
+      <div class="docentes-list" id="docentesList"></div>
+    </aside>
+
+    <!-- Tabla Cuadrante -->
+    <main class="schedule-wrapper" id="cuadranteContainer">
+      <div id="pdf-header" style="display:none; margin-bottom: 15px;">
+        <h2 style="font-size: 1.3rem; color: #1e40af;">PLANIFICACIÓN DE GUARDIAS DE RECREO - CURSO ESCOLAR</h2>
+        <p style="font-size: 0.85rem; color: #64748b;">Válido de Septiembre a Junio • Lunes a Viernes</p>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 150px;">Lugar / Puesto</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+          </tr>
+        </thead>
+        <tbody id="tablaBody"></tbody>
+      </table>
+    </main>
+  </div>
+</div>
+
+<script>
+  const LUGARES = [
+    "Pista 3º",
+    "Pista 4º",
+    "Pista 5º",
+    "Pista 6º",
+    "Servicios",
+    "Pasillo"
+  ];
+
+  const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+
+  // 15 docentes de ejemplo (6 puestos x 5 días = 30 guardias; 15 profesores x 2 guardias)
+  const DOCENTES_DEFECTO = [
+    "García M.", "Rodríguez L.", "Fernández C.", "López A.",
+    "Martínez S.", "Sánchez P.", "Pérez D.", "Gómez R.",
+    "Martín E.", "Jiménez I.", "Ruiz V.", "Hernández J.",
+    "Díaz F.", "Moreno T.", "Álvarez B."
+  ];
+
+  let docentes = JSON.parse(localStorage.getItem('guardias_docentes')) || DOCENTES_DEFECTO;
+  let cuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
+
+  function guardarDatos() {
+    localStorage.setItem('guardias_docentes', JSON.stringify(docentes));
+    localStorage.setItem('guardias_cuadrante', JSON.stringify(cuadrante));
+    render();
+  }
+
+  function agregarDocente() {
+    const input = document.getElementById('nuevoDocenteNombre');
+    const nombre = input.value.trim();
+    if (nombre && !docentes.includes(nombre)) {
+      docentes.push(nombre);
+      input.value = '';
+      guardarDatos();
+    }
+  }
+
+  function eliminarDocente(index) {
+    const borrado = docentes.splice(index, 1)[0];
+    for (let key in cuadrante) {
+      if (cuadrante[key] === borrado) delete cuadrante[key];
+    }
+    guardarDatos();
+  }
+
+  function contarGuardias(docente) {
+    let count = 0;
+    for (let key in cuadrante) {
+      if (cuadrante[key] === docente) count++;
+    }
+    return count;
+  }
+
+  function verificarConflictoDia(docente, dia) {
+    let vecesHoy = 0;
+    LUGARES.forEach(lugar => {
+      if (cuadrante[`${dia}_${lugar}`] === docente) vecesHoy++;
+    });
+    return vecesHoy > 1;
+  }
+
+  // --- Drag and Drop ---
+  let draggedData = null;
+
+  function onDragStartDocente(e, nombre) {
+    draggedData = { type: 'docente', nombre: nombre };
+    e.dataTransfer.setData('text/plain', JSON.stringify(draggedData));
+  }
+
+  function onDragStartSlot(e, dia, lugar, nombre) {
+    draggedData = { type: 'slot', dia: dia, lugar: lugar, nombre: nombre };
+    e.dataTransfer.setData('text/plain', JSON.stringify(draggedData));
+  }
+
+  function allowDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  }
+
+  function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+
+  function onDropSlot(e, diaDestino, lugarDestino) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    if (!draggedData) return;
+
+    const slotDestinoKey = `${diaDestino}_${lugarDestino}`;
+    const docenteDestinoActual = cuadrante[slotDestinoKey];
+
+    if (draggedData.type === 'docente') {
+      cuadrante[slotDestinoKey] = draggedData.nombre;
+    } else if (draggedData.type === 'slot') {
+      const slotOrigenKey = `${draggedData.dia}_${draggedData.lugar}`;
+      cuadrante[slotDestinoKey] = draggedData.nombre;
+      if (docenteDestinoActual) {
+        cuadrante[slotOrigenKey] = docenteDestinoActual; // Intercambiar
+      } else {
+        delete cuadrante[slotOrigenKey]; // Mover
+      }
+    }
+    draggedData = null;
+    guardarDatos();
+  }
+
+  function quitarAsignacion(dia, lugar) {
+    delete cuadrante[`${dia}_${lugar}`];
+    guardarDatos();
+  }
+
+  function limpiarCuadrante() {
+    if (confirm("¿Vaciar todos los turnos asignados en la tabla?")) {
+      cuadrante = {};
+      guardarDatos();
+    }
+  }
+
+  function autoAsignar() {
+    cuadrante = {};
+    const conteo = {};
+    docentes.forEach(d => conteo[d] = 0);
+
+    DIAS.forEach(dia => {
+      LUGARES.forEach(lugar => {
+        const disponibles = docentes.filter(doc => {
+          const yaHoy = LUGARES.some(l => cuadrante[`${dia}_${l}`] === doc);
+          return conteo[doc] < 2 && !yaHoy;
+        });
+
+        if (disponibles.length > 0) {
+          disponibles.sort((a, b) => conteo[a] - conteo[b] || Math.random() - 0.5);
+          const elegido = disponibles[0];
+          cuadrante[`${dia}_${lugar}`] = elegido;
+          conteo[elegido]++;
+        }
+      });
+    });
+
+    guardarDatos();
+  }
+
+  function exportarPDF() {
+    const elemento = document.getElementById('cuadranteContainer');
+    const headerPdf = document.getElementById('pdf-header');
+    headerPdf.style.display = 'block';
+
+    const opciones = {
+      margin: 8,
+      filename: 'guardias_recreo_curso_escolar.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opciones).from(elemento).save().then(() => {
+      headerPdf.style.display = 'none';
+    });
+  }
+
+  function render() {
+    // 1. Docentes
+    document.getElementById('total-docentes').textContent = docentes.length;
+    const listaDoc = document.getElementById('docentesList');
+    listaDoc.innerHTML = docentes.map((doc, idx) => {
+      const cant = contarGuardias(doc);
+      let badgeClass = 'badge-pending';
+      if (cant === 2) badgeClass = 'badge-ok';
+      if (cant > 2) badgeClass = 'badge-over';
+
+      return `
+        <div class="docente-item" draggable="true" ondragstart="onDragStartDocente(event, '${doc}')">
+          <span style="font-weight:500;">${doc}</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="badge ${badgeClass}">${cant}/2</span>
+            <button class="chip-del" onclick="eliminarDocente(${idx})" title="Eliminar docente">&times;</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 2. Cuadrante
+    const tablaBody = document.getElementById('tablaBody');
+    tablaBody.innerHTML = LUGARES.map(lugar => {
+      return `
+        <tr>
+          <td class="location-cell">${lugar}</td>
+          ${DIAS.map(dia => {
+            const docente = cuadrante[`${dia}_${lugar}`];
+            const hayConflicto = docente ? verificarConflictoDia(docente, dia) : false;
+            
+            return `
+              <td class="drop-zone" 
+                  ondragover="allowDrop(event)" 
+                  ondragleave="onDragLeave(event)" 
+                  ondrop="onDropSlot(event, '${dia}', '${lugar}')">
+                ${docente ? `
+                  <div class="assigned-chip ${hayConflicto ? 'conflict' : ''}" 
+                       draggable="true" 
+                       ondragstart="onDragStartSlot(event, '${dia}', '${lugar}', '${docente}')"
+                       title="${hayConflicto ? '¡Atención! Este docente tiene 2 puestos el mismo día' : 'Arrastra para mover o intercambiar'}">
+                    <span>${docente} ${hayConflicto ? '⚠️' : ''}</span>
+                    <button class="chip-del" onclick="quitarAsignacion('${dia}', '${lugar}')">&times;</button>
+                  </div>
+                ` : `<div class="hint-text">Arrastra aquí</div>`}
+              </td>
+            `;
+          }).join('')}
+        </tr>
+      `;
+    }).join('');
+  }
+
+  render();
+</script>
+</body>
+</html>
