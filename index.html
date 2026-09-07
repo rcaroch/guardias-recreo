@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guardias de Recreo - Escolapios Genil</title>
+  <title>Cuadrante de Guardias de Recreo - Centro Escolar</title>
   <!-- Librería html2pdf para exportar a PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -18,10 +18,23 @@
       --success: #15803d;
       --warning: #b45309;
       --danger: #b91c1c;
-      --accent: #7c3aed;
-      --locked-bg: #fef3c7;
-      --locked-border: #d97706;
-      --locked-text: #92400e;
+      
+      /* Variables cromáticas específicas de las fichas */
+      --chip-blue-bg: #eff6ff;
+      --chip-blue-border: #93c5fd;
+      --chip-blue-text: #1e40af;
+
+      --chip-locked-bg: #fef9c3;
+      --chip-locked-border: #d97706;
+      --chip-locked-text: #92400e;
+
+      --chip-tutor-bg: #f5f3ff;
+      --chip-tutor-border: #a855f7;
+      --chip-tutor-text: #6b21a8;
+
+      --chip-conflict-bg: #fee2e2;
+      --chip-conflict-border: #ef4444;
+      --chip-conflict-text: #991b1b;
     }
 
     * {
@@ -38,16 +51,16 @@
     }
 
     .container {
-      max-width: 1540px;
+      max-width: 1600px;
       margin: 0 auto;
     }
 
     header {
       background: var(--card-bg);
-      padding: 18px 22px;
+      padding: 16px 20px;
       border-radius: 10px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
@@ -56,7 +69,7 @@
     }
 
     .header-info h1 {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       color: var(--primary);
       display: flex;
       align-items: center;
@@ -73,9 +86,9 @@
     }
 
     .header-info p {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
-      margin-top: 3px;
+      margin-top: 2px;
     }
 
     .toolbar {
@@ -87,7 +100,7 @@
     button {
       cursor: pointer;
       border: none;
-      padding: 8px 14px;
+      padding: 8px 13px;
       border-radius: 6px;
       font-weight: 600;
       font-size: 0.82rem;
@@ -108,26 +121,26 @@
 
     .main-layout {
       display: grid;
-      grid-template-columns: 400px 1fr;
-      gap: 18px;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
       align-items: start;
     }
 
     .sidebar {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .card {
       background: var(--card-bg);
-      padding: 16px;
+      padding: 15px;
       border-radius: 10px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .card h2 {
-      font-size: 1.05rem;
+      font-size: 1rem;
       margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
@@ -191,7 +204,7 @@
     .badge-over { background: #fee2e2; color: var(--danger); }
 
     .tutoria-select {
-      max-width: 100px;
+      max-width: 95px;
       font-size: 0.75rem;
       padding: 3px 4px;
       border-color: #cbd5e1;
@@ -221,35 +234,38 @@
     .icon-btn:hover { color: var(--danger); background: #fee2e2; }
     .icon-btn-edit:hover { color: var(--primary); background: #e0f2fe; }
 
-    /* Botón de Candado */
-    .lock-btn {
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-      padding: 2px 5px;
-      cursor: pointer;
-      display: inline-flex;
+    /* Leyenda Visual */
+    .legend-bar {
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 3px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      transition: all 0.15s ease;
-    }
-    .lock-btn:hover {
-      background: #ffffff;
-      border-color: #94a3b8;
-    }
-    .lock-btn.is-locked {
-      background: #fef3c7;
-      border-color: var(--locked-border);
-      color: var(--locked-text);
+      gap: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 0.75rem;
     }
 
-    /* Estilos del Cuadrante */
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+
+    .legend-sample {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    /* Estructura del Cuadrante y Celdas Ampliadas */
     .schedule-wrapper {
       background: var(--card-bg);
-      padding: 18px;
+      padding: 16px;
       border-radius: 10px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
       overflow-x: auto;
@@ -257,6 +273,7 @@
 
     table {
       width: 100%;
+      min-width: 980px;
       border-collapse: collapse;
       text-align: left;
       table-layout: fixed;
@@ -264,7 +281,7 @@
 
     th, td {
       border: 1px solid var(--border);
-      padding: 8px;
+      padding: 10px 8px;
       vertical-align: top;
     }
 
@@ -276,8 +293,15 @@
       letter-spacing: 0.04em;
     }
 
-    th.col-lugar, td.location-cell { width: 15%; }
-    th.col-dia, td.drop-zone { width: 17%; }
+    th.col-lugar, td.location-cell {
+      width: 15%;
+      min-width: 135px;
+    }
+
+    th.col-dia, td.drop-zone {
+      width: 17%;
+      min-width: 165px;
+    }
 
     .location-cell {
       background: #f8fafc;
@@ -290,8 +314,8 @@
     .cell-content {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      min-height: 60px;
+      gap: 8px;
+      min-height: 85px;
     }
 
     .drop-zone.drag-over {
@@ -299,56 +323,138 @@
       outline: 2px dashed var(--primary-light);
     }
 
+    /* Tarjeta del Docente (Ficha con diseño en 2 niveles) */
     .assigned-chip {
-      background: #e0f2fe;
-      border: 1px solid #bae6fd;
-      color: #0369a1;
       border-radius: 6px;
-      padding: 5px 6px;
-      font-size: 0.77rem;
-      font-weight: 600;
+      padding: 6px 8px;
+      cursor: grab;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .chip-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: grab;
-      transition: background-color 0.2s, border-color 0.2s;
+      gap: 4px;
     }
 
-    /* Ficha cuando está fijada con candado */
-    .assigned-chip.is-locked {
-      background: var(--locked-bg) !important;
-      border: 1.5px solid var(--locked-border) !important;
-      color: var(--locked-text) !important;
+    .chip-name {
+      font-weight: 700;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .assigned-chip.is-tutor {
-      border-left: 3px solid var(--accent);
+    .chip-footer {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
     }
 
-    .assigned-chip.conflict {
-      background: #fee2e2 !important;
-      border-color: #fca5a5 !important;
-      color: var(--danger) !important;
+    /* 1. Ficha Azul Estándar */
+    .assigned-chip.chip-blue {
+      background: var(--chip-blue-bg);
+      border: 1.5px solid var(--chip-blue-border);
+      color: var(--chip-blue-text);
+    }
+
+    /* 2. Ficha Morada / Tutoría */
+    .assigned-chip.chip-tutor {
+      background: var(--chip-tutor-bg);
+      border: 1.5px solid var(--chip-tutor-border);
+      color: var(--chip-tutor-text);
+      border-left: 4px solid #7c3aed;
+    }
+
+    /* 3. Ficha Dorada / Fijada con candado */
+    .assigned-chip.chip-locked {
+      background: var(--chip-locked-bg) !important;
+      border: 1.5px solid var(--chip-locked-border) !important;
+      color: var(--chip-locked-text) !important;
+    }
+
+    /* Si es Tutor y además está Fijado, mantiene borde morado de tutor */
+    .assigned-chip.chip-locked.chip-tutor {
+      border-left: 4px solid #7c3aed !important;
+    }
+
+    /* 4. Ficha Roja / Alerta de colisión (Máxima prioridad visual) */
+    .assigned-chip.chip-conflict {
+      background: var(--chip-conflict-bg) !important;
+      border: 2px solid var(--chip-conflict-border) !important;
+      color: var(--chip-conflict-text) !important;
+    }
+
+    /* Botón de Candado */
+    .lock-btn {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+    }
+    .lock-btn:hover { background: #ffffff; border-color: #94a3b8; }
+    
+    .lock-btn.is-locked {
+      background: #fef08a;
+      border-color: #ca8a04;
+      color: #854d0e;
+    }
+
+    /* Pastillas informativas de estado */
+    .pill {
+      font-size: 0.66rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .pill-tutor {
+      background: #ede9fe;
+      color: #6d28d9;
+      border: 1px solid #ddd6fe;
+    }
+
+    .pill-conflict {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
     }
 
     .slot-placeholder {
       font-size: 0.7rem;
       color: #94a3b8;
       border: 1px dashed #cbd5e1;
-      border-radius: 4px;
-      padding: 4px;
+      border-radius: 5px;
+      padding: 6px;
       text-align: center;
       font-style: italic;
     }
 
     @media print {
       body { background: white; padding: 0; }
-      .sidebar, .toolbar, .icon-btn, .lock-btn, .slot-placeholder { display: none !important; }
+      .sidebar, .toolbar, .icon-btn, .lock-btn, .slot-placeholder, .legend-bar { display: none !important; }
       .main-layout { display: block; }
       .schedule-wrapper { box-shadow: none; padding: 0; }
       table { border-collapse: collapse; width: 100%; font-size: 9pt; table-layout: fixed; }
-      th, td { border: 1px solid #666; padding: 4px; }
-      .assigned-chip { background: transparent !important; border: none !important; color: black !important; font-weight: bold; padding: 1px 0; }
+      th, td { border: 1px solid #666; padding: 5px; }
+      .assigned-chip { background: transparent !important; border: none !important; color: black !important; padding: 1px 0; }
       @page { size: landscape; margin: 8mm; }
     }
   </style>
@@ -359,14 +465,14 @@
   <header>
     <div class="header-info">
       <h1>
-        Guardias de Recreo - Escolapios Genil
-        <span class="version-tag">v5.1 - Candados Activos</span>
+        Cuadrante de Guardias de Recreo
+        <span class="version-tag">v5.2 - Convenciones Visuales</span>
       </h1>
       <p>Curso Escolar (Septiembre - Junio) • Bloqueo de turnos fijos, zonas simultáneas y prioridad de tutoría</p>
     </div>
     <div class="toolbar">
       <button class="btn-primary" onclick="autoAsignar()">🪄 Reparto Automático</button>
-      <button class="btn-outline" onclick="desbloquearTodos()" title="Quitar todos los candados y dejar todos los puestos libres para repartir">🔓 Desbloquear Todos</button>
+      <button class="btn-outline" onclick="desbloquearTodos()" title="Quitar todos los candados y dejar todas las guardias libres para repartir">🔓 Desbloquear Todos</button>
       <button class="btn-success" onclick="exportarPDF()">📄 Descargar PDF</button>
       <button class="btn-outline" onclick="window.print()">🖨️ Imprimir</button>
       
@@ -393,7 +499,7 @@
         </div>
         <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; padding:0 4px;">
           <span>Zona</span>
-          <span>Docentes simultáneos / Acciones</span>
+          <span>Docentes a la vez / Acciones</span>
         </div>
         <div class="list-container" id="zonasList" style="max-height: 180px;"></div>
       </div>
@@ -426,6 +532,27 @@
       <div id="pdf-header" style="display:none; margin-bottom: 12px;">
         <h2 style="font-size: 1.25rem; color: #1e40af;">PLANIFICACIÓN DE GUARDIAS DE RECREO - CURSO ESCOLAR</h2>
         <p style="font-size: 0.8rem; color: #64748b;">Turnos fijos de Septiembre a Junio • Lunes a Viernes</p>
+      </div>
+
+      <!-- Barra de Leyenda Visual -->
+      <div class="legend-bar">
+        <span style="font-weight:700; color:var(--text-muted);">Leyenda visual:</span>
+        <div class="legend-item">
+          <span class="legend-sample" style="background:#eff6ff; border:1px solid #93c5fd;"></span>
+          <span>🟦 Estándar flexible</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-sample" style="background:#fef9c3; border:1.5px solid #d97706;"></span>
+          <span>🟨 Fijada con candado (🔒)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-sample" style="background:#f5f3ff; border:1.5px solid #a855f7;"></span>
+          <span>🟪 En su pista de tutoría (⭐)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-sample" style="background:#fee2e2; border:1.5px solid #ef4444;"></span>
+          <span>🟥 Conflicto: 2 el mismo día (⚠️)</span>
+        </div>
       </div>
       
       <table>
@@ -476,7 +603,6 @@
     { nombre: "Navarro, R.", tutoria: "", maxGuardias: 2 }
   ];
 
-  // Carga de Zonas
   let rawZonas = JSON.parse(localStorage.getItem('guardias_zonas')) || ZONAS_DEFECTO;
   let zonas = rawZonas.map(z => {
     if (typeof z === 'string') {
@@ -486,7 +612,6 @@
     return { nombre: z.nombre, capacidad: Math.max(1, parseInt(z.capacidad) || 1) };
   });
 
-  // Carga de Docentes
   let rawDocentes = JSON.parse(localStorage.getItem('guardias_docentes')) || DOCENTES_DEFECTO;
   let docentes = rawDocentes.map(d => {
     if (typeof d === 'string') return { nombre: d, tutoria: '', maxGuardias: 2 };
@@ -497,7 +622,6 @@
     };
   });
 
-  // Carga de Cuadrante
   let rawCuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
   let cuadrante = {};
   for (let key in rawCuadrante) {
@@ -510,7 +634,6 @@
     }
   }
 
-  // Estructura de turnos fijados
   let fijados = JSON.parse(localStorage.getItem('guardias_fijados')) || {};
 
   function guardarTodo() {
@@ -521,7 +644,6 @@
     render();
   }
 
-  // Activar o desactivar candado
   function toggleFijar(btn) {
     const dia = btn.dataset.dia;
     const zona = btn.dataset.zona;
@@ -536,7 +658,6 @@
     guardarTodo();
   }
 
-  // Liberar todos los candados
   function desbloquearTodos() {
     const total = Object.keys(fijados).length;
     if (total === 0) {
@@ -558,7 +679,6 @@
     return arr;
   }
 
-  // --- Algoritmo de Reparto Inteligente con Respeto de Candados ---
   function autoAsignar() {
     const conteoDocente = {};
     const docenteDias = {};
@@ -571,7 +691,7 @@
     const nuevoCuadrante = {};
     let totalFijados = 0;
 
-    // 1. Conservar ÚNICAMENTE los turnos fijados con candado
+    // 1. Mantener intactos los turnos bloqueados con candado
     DIAS.forEach(dia => {
       zonas.forEach(z => {
         const key = `${dia}_${z.nombre}`;
@@ -592,7 +712,7 @@
 
     cuadrante = nuevoCuadrante;
 
-    // 2. FASE 1: Tutores no fijados en su propia pista
+    // 2. FASE 1: Prioridad de tutores en su pista
     docentes.forEach(doc => {
       const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
       const zonaObj = zonas.find(z => z.nombre === doc.tutoria);
@@ -617,7 +737,7 @@
       }
     });
 
-    // 3. FASE 2: Recopilar y barajar los huecos restantes
+    // 3. FASE 2: Huecos restantes distribuidos homogéneamente
     const huecosRestantes = [];
     DIAS.forEach(dia => {
       zonas.forEach(z => {
@@ -630,7 +750,6 @@
 
     const huecosMezclados = barajar(huecosRestantes);
 
-    // 4. Asignar los puestos libres priorizando a quien le faltan más horas
     huecosMezclados.forEach(hueco => {
       const key = `${hueco.dia}_${hueco.zona}`;
 
@@ -668,10 +787,9 @@
     alert(`✅ ¡Reparto equilibrado realizado!\n🔒 Turnos fijados respetados: ${totalFijados}\n\n${desglose}`);
   }
 
-  // --- Copia de Seguridad ---
   function exportarCopiaSeguridad() {
     const backupData = {
-      version: 5,
+      version: 5.2,
       fecha: new Date().toLocaleDateString('es-ES'),
       zonas: zonas,
       docentes: docentes,
@@ -723,7 +841,6 @@
     reader.readAsText(file);
   }
 
-  // --- Gestión de Zonas ---
   function agregarZona() {
     const inputNombre = document.getElementById('nuevaZonaNombre');
     const inputCap = document.getElementById('nuevaZonaCapacidad');
@@ -799,7 +916,6 @@
     }
   }
 
-  // --- Gestión de Docentes ---
   function agregarDocente() {
     const inputNombre = document.getElementById('nuevoDocenteNombre');
     const inputGuardias = document.getElementById('nuevoDocenteGuardias');
@@ -882,7 +998,6 @@
     return veces > 1;
   }
 
-  // --- Drag and Drop ---
   let draggedData = null;
 
   function onDragStartDocente(e, nombre) {
@@ -891,7 +1006,6 @@
   }
 
   function onDragStartSlot(e, dia, zona, nombre) {
-    // Si se hace clic en un botón interno, no iniciar arrastre
     if (e.target.closest('button')) {
       e.preventDefault();
       return;
@@ -1007,7 +1121,6 @@
     });
   }
 
-  // --- Renderizado UI ---
   function render() {
     // 1. Zonas
     document.getElementById('total-zonas').textContent = zonas.length;
@@ -1093,7 +1206,12 @@
                     const esSuPista = docObj && docObj.tutoria === zona.nombre;
                     const estaFijado = !!fijados[`${dia}_${zona.nombre}_${nombreDocente}`];
 
-                    // SVG Candado Abierto (Gris claro) vs SVG Candado Cerrado (Dorado sólido)
+                    // Resolver clases cromáticas precisas
+                    let colorClass = 'chip-blue';
+                    if (esSuPista) colorClass = 'chip-tutor';
+                    if (estaFijado) colorClass = 'chip-locked';
+                    if (hayConflicto) colorClass = 'chip-conflict'; // Conflicto siempre tiene máxima prioridad
+
                     const lockIconSvg = estaFijado ? `
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 5a3 3 0 0 1 6 0v3H9V7z"/>
@@ -1106,12 +1224,27 @@
                     `;
 
                     return `
-                      <div class="assigned-chip ${estaFijado ? 'is-locked' : ''} ${hayConflicto ? 'conflict' : ''} ${esSuPista ? 'is-tutor' : ''}" 
+                      <div class="assigned-chip ${colorClass} ${estaFijado && esSuPista ? 'chip-tutor' : ''}" 
                            draggable="true" 
                            ondragstart="onDragStartSlot(event, '${dia}', '${zona.nombre}', '${nombreDocente}')"
-                           title="${estaFijado ? 'Turno FIJADO 🔒 (no se moverá en el reparto automático)' : 'Turno flexible (se moverá en el reparto)'}">
+                           title="${estaFijado ? 'Turno FIJADO 🔒' : 'Turno flexible'}">
                         
-                        <div style="display:flex; align-items:center; gap:5px; overflow:hidden;">
+                        <!-- Línea 1: Nombre y Borrado -->
+                        <div class="chip-header">
+                          <span class="chip-name" title="${nombreDocente}">${nombreDocente}</span>
+                          <button class="icon-btn" 
+                                  style="padding:0 2px;"
+                                  draggable="false"
+                                  onmousedown="event.stopPropagation()"
+                                  onclick="event.stopPropagation(); quitarAsignacion(this)"
+                                  data-dia="${dia}"
+                                  data-zona="${zona.nombre.replace(/"/g, '&quot;')}"
+                                  data-docente="${nombreDocente.replace(/"/g, '&quot;')}"
+                                  title="Quitar turno">&times;</button>
+                        </div>
+
+                        <!-- Línea 2: Candado y Badges Informativos -->
+                        <div class="chip-footer">
                           <button class="lock-btn ${estaFijado ? 'is-locked' : ''}" 
                                   draggable="false"
                                   onmousedown="event.stopPropagation()"
@@ -1123,21 +1256,11 @@
                             ${lockIconSvg}
                             <span>${estaFijado ? 'Fijado' : 'Libre'}</span>
                           </button>
-                          
-                          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                            ${nombreDocente} ${esSuPista ? '⭐' : ''} ${hayConflicto ? '⚠️' : ''}
-                          </span>
+
+                          ${esSuPista ? `<span class="pill pill-tutor" title="Asignado a su pista de tutoría">⭐ Tutor</span>` : ''}
+                          ${hayConflicto ? `<span class="pill pill-conflict" title="¡Atención! Este docente tiene 2 guardias hoy">⚠️ 2 hoy</span>` : ''}
                         </div>
 
-                        <button class="icon-btn" 
-                                style="padding:0 3px;"
-                                draggable="false"
-                                onmousedown="event.stopPropagation()"
-                                onclick="event.stopPropagation(); quitarAsignacion(this)"
-                                data-dia="${dia}"
-                                data-zona="${zona.nombre.replace(/"/g, '&quot;')}"
-                                data-docente="${nombreDocente.replace(/"/g, '&quot;')}"
-                                title="Eliminar asignación">&times;</button>
                       </div>
                     `;
                   }).join('')}
@@ -1157,7 +1280,6 @@
     }).join('');
   }
 
-  // Carga inicial
   render();
 </script>
 </body>
