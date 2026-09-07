@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guardias de Recreo - Escolapios Genil</title>
+  <title>Cuadrante de Guardias de Recreo - Centro Escolar</title>
   <!-- Librería html2pdf para exportar a PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -19,6 +19,7 @@
       --warning: #b45309;
       --danger: #b91c1c;
       --accent: #7c3aed;
+      --locked: #d97706;
     }
 
     * {
@@ -35,7 +36,7 @@
     }
 
     .container {
-      max-width: 1520px;
+      max-width: 1540px;
       margin: 0 auto;
     }
 
@@ -214,6 +215,8 @@
     }
     .icon-btn:hover { color: var(--danger); background: #fee2e2; }
     .icon-btn-edit:hover { color: var(--primary); background: #e0f2fe; }
+    .icon-btn-lock { font-size: 0.8rem; padding: 1px 3px; }
+    .icon-btn-lock:hover { background: #fef3c7; }
 
     /* Estilos del Cuadrante */
     .schedule-wrapper {
@@ -228,7 +231,7 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      table-layout: fixed; /* Asegura un 17% idéntico para cada día */
+      table-layout: fixed;
     }
 
     th, td {
@@ -245,13 +248,8 @@
       letter-spacing: 0.04em;
     }
 
-    th.col-lugar, td.location-cell {
-      width: 15%;
-    }
-
-    th.col-dia, td.drop-zone {
-      width: 17%;
-    }
+    th.col-lugar, td.location-cell { width: 15%; }
+    th.col-dia, td.drop-zone { width: 17%; }
 
     .location-cell {
       background: #f8fafc;
@@ -285,12 +283,18 @@
       justify-content: space-between;
       align-items: center;
       cursor: grab;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    /* Estado cuando la guardia está fijada / bloqueada */
+    .assigned-chip.is-locked {
+      background: #fffbeb;
+      border: 1.5px solid var(--locked);
+      color: #92400e;
     }
 
     .assigned-chip.is-tutor {
       border-left: 3px solid var(--accent);
-      background: #f5f3ff;
-      color: #5b21b6;
     }
 
     .assigned-chip.conflict {
@@ -316,7 +320,7 @@
       .schedule-wrapper { box-shadow: none; padding: 0; }
       table { border-collapse: collapse; width: 100%; font-size: 9pt; table-layout: fixed; }
       th, td { border: 1px solid #666; padding: 4px; }
-      .assigned-chip { background: transparent; border: none; color: black; font-weight: bold; padding: 1px 0; }
+      .assigned-chip { background: transparent !important; border: none !important; color: black !important; font-weight: bold; padding: 1px 0; }
       @page { size: landscape; margin: 8mm; }
     }
   </style>
@@ -327,10 +331,10 @@
   <header>
     <div class="header-info">
       <h1>
-        Guardias de Recreo - Escolapios Genil
-        <span class="version-tag">v4.5 - Reparto Equitativo</span>
+        Cuadrante de Guardias de Recreo
+        <span class="version-tag">v5.0 - Fijar Guardias 🔒</span>
       </h1>
-      <p>Curso Escolar (Septiembre - Junio) • Puestos con múltiples docentes y prioridad de tutoría</p>
+      <p>Curso Escolar (Septiembre - Junio) • Bloqueo de turnos fijos, zonas con múltiples docentes y prioridad de tutoría</p>
     </div>
     <div class="toolbar">
       <button class="btn-primary" onclick="autoAsignar()">🪄 Reparto Automático</button>
@@ -415,7 +419,6 @@
 <script>
   const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
-  // Configuración por defecto: Pista 3º con 2 docentes simultáneos
   const ZONAS_DEFECTO = [
     { nombre: "Pista 3º", capacidad: 2 },
     { nombre: "Pista 4º", capacidad: 1 },
@@ -444,7 +447,7 @@
     { nombre: "Navarro, R.", tutoria: "", maxGuardias: 2 }
   ];
 
-  // Carga y normalización de Zonas
+  // Carga de Zonas
   let rawZonas = JSON.parse(localStorage.getItem('guardias_zonas')) || ZONAS_DEFECTO;
   let zonas = rawZonas.map(z => {
     if (typeof z === 'string') {
@@ -454,7 +457,7 @@
     return { nombre: z.nombre, capacidad: Math.max(1, parseInt(z.capacidad) || 1) };
   });
 
-  // Carga y normalización de Docentes
+  // Carga de Docentes
   let rawDocentes = JSON.parse(localStorage.getItem('guardias_docentes')) || DOCENTES_DEFECTO;
   let docentes = rawDocentes.map(d => {
     if (typeof d === 'string') return { nombre: d, tutoria: '', maxGuardias: 2 };
@@ -465,7 +468,7 @@
     };
   });
 
-  // Carga y saneamiento de Cuadrante
+  // Carga de Cuadrante
   let rawCuadrante = JSON.parse(localStorage.getItem('guardias_cuadrante')) || {};
   let cuadrante = {};
   for (let key in rawCuadrante) {
@@ -478,14 +481,27 @@
     }
   }
 
+  // Estructura de turnos fijados: { "Lunes_Pista 3º_Pepe": true }
+  let fijados = JSON.parse(localStorage.getItem('guardias_fijados')) || {};
+
   function guardarTodo() {
     localStorage.setItem('guardias_zonas', JSON.stringify(zonas));
     localStorage.setItem('guardias_docentes', JSON.stringify(docentes));
     localStorage.setItem('guardias_cuadrante', JSON.stringify(cuadrante));
+    localStorage.setItem('guardias_fijados', JSON.stringify(fijados));
     render();
   }
 
-  // --- Función de Barajado Matemático (Fisher-Yates) ---
+  function toggleFijar(dia, zona, nombre) {
+    const key = `${dia}_${zona}_${nombre}`;
+    if (fijados[key]) {
+      delete fijados[key];
+    } else {
+      fijados[key] = true;
+    }
+    guardarTodo();
+  }
+
   function barajar(array) {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -495,25 +511,41 @@
     return arr;
   }
 
-  // --- Algoritmo de Reparto Automático Equitativo ---
+  // --- Algoritmo de Reparto Inteligente con Respeto de Candados ---
   function autoAsignar() {
-    cuadrante = {};
     const conteoDocente = {};
-    const docenteDias = {}; // Registro de días que trabaja cada docente (máximo 1 por día)
+    const docenteDias = {};
 
     docentes.forEach(d => {
       conteoDocente[d.nombre] = 0;
       docenteDias[d.nombre] = new Set();
     });
 
-    // 1. Inicializar todas las casillas vacías de lunes a viernes
+    const nuevoCuadrante = {};
+
+    // 1. Inicializar y PRESERVAR exclusivamente los turnos fijados con candado
+    let totalFijados = 0;
     DIAS.forEach(dia => {
       zonas.forEach(z => {
-        cuadrante[`${dia}_${z.nombre}`] = [];
+        const key = `${dia}_${z.nombre}`;
+        nuevoCuadrante[key] = [];
+        
+        const anteriores = cuadrante[key] || [];
+        anteriores.forEach(nombre => {
+          const lockKey = `${dia}_${z.nombre}_${nombre}`;
+          if (fijados[lockKey]) {
+            nuevoCuadrante[key].push(nombre);
+            conteoDocente[nombre] = (conteoDocente[nombre] || 0) + 1;
+            docenteDias[nombre].add(dia);
+            totalFijados++;
+          }
+        });
       });
     });
 
-    // 2. FASE 1: Prioridad de Tutores en su propia zona repartidos en días diferentes
+    cuadrante = nuevoCuadrante;
+
+    // 2. FASE 1: Tutores no fijados en su propia pista (hasta completar su cupo o límite de tutoría)
     docentes.forEach(doc => {
       const maxG = doc.maxGuardias !== undefined ? doc.maxGuardias : 2;
       const zonaObj = zonas.find(z => z.nombre === doc.tutoria);
@@ -538,7 +570,7 @@
       }
     });
 
-    // 3. FASE 2: Recopilar todos los huecos libres de toda la semana
+    // 3. FASE 2: Recopilar todos los huecos restantes que quedan libres
     const huecosRestantes = [];
     DIAS.forEach(dia => {
       zonas.forEach(z => {
@@ -549,10 +581,9 @@
       });
     });
 
-    // Barajar completamente los huecos para repartir equilibradamente entre todos los días
     const huecosMezclados = barajar(huecosRestantes);
 
-    // 4. Asignar los puestos libres priorizando a quien le faltan más guardias por cumplir
+    // 4. Asignar los puestos libres priorizando a quien le faltan más horas
     huecosMezclados.forEach(hueco => {
       const key = `${hueco.dia}_${hueco.zona}`;
 
@@ -564,7 +595,6 @@
       });
 
       if (candidatos.length > 0) {
-        // Ordenar primero a quienes tienen más turnos pendientes por hacer
         candidatos.sort((a, b) => {
           const pendA = (a.maxGuardias !== undefined ? a.maxGuardias : 2) - conteoDocente[a.nombre];
           const pendB = (b.maxGuardias !== undefined ? b.maxGuardias : 2) - conteoDocente[b.nombre];
@@ -580,7 +610,6 @@
 
     guardarTodo();
 
-    // 5. Informe de balance diario para verificar en pantalla
     const desglose = DIAS.map(d => {
       let turnosDia = 0;
       zonas.forEach(z => {
@@ -589,17 +618,18 @@
       return `• ${d}: ${turnosDia} guardias`;
     }).join('\n');
 
-    alert(`✅ ¡Reparto equilibrado realizado con éxito!\n\n${desglose}`);
+    alert(`✅ ¡Reparto equilibrado realizado!\n🔒 Turnos fijos respetados: ${totalFijados}\n\n${desglose}`);
   }
 
   // --- Copia de Seguridad ---
   function exportarCopiaSeguridad() {
     const backupData = {
-      version: 4,
+      version: 5,
       fecha: new Date().toLocaleDateString('es-ES'),
       zonas: zonas,
       docentes: docentes,
-      cuadrante: cuadrante
+      cuadrante: cuadrante,
+      fijados: fijados
     };
 
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -625,7 +655,7 @@
           return;
         }
 
-        if (confirm(`¿Cargar esta copia de seguridad del ${data.fecha || 'archivo'}?\nReemplazará los datos actuales.`)) {
+        if (confirm(`¿Cargar copia de seguridad del ${data.fecha || 'archivo'}?\nReemplazará los datos actuales.`)) {
           zonas = data.zonas.map(z => typeof z === 'string' ? { nombre: z, capacidad: 1 } : { nombre: z.nombre, capacidad: Math.max(1, parseInt(z.capacidad) || 1) });
           docentes = data.docentes.map(d => typeof d === 'string' ? { nombre: d, tutoria: '', maxGuardias: 2 } : { nombre: d.nombre, tutoria: d.tutoria || '', maxGuardias: Number(d.maxGuardias) || 2 });
           
@@ -634,11 +664,12 @@
             cuadrante[k] = Array.isArray(data.cuadrante[k]) ? data.cuadrante[k] : [data.cuadrante[k]].filter(Boolean);
           }
           
+          fijados = data.fijados || {};
           guardarTodo();
           alert("¡Copia cargada con éxito!");
         }
       } catch (err) {
-        alert("Error al leer el archivo. Asegúrate de que sea un archivo JSON válido.");
+        alert("Error al leer el archivo JSON.");
       }
       event.target.value = "";
     };
@@ -685,6 +716,17 @@
       }
       cuadrante = nuevoCuadrante;
 
+      const nuevosFijados = {};
+      for (let k in fijados) {
+        const [dia, z, doc] = k.split('_');
+        if (z === antigua) {
+          nuevosFijados[`${dia}_${limpio}_${doc}`] = true;
+        } else {
+          nuevosFijados[k] = true;
+        }
+      }
+      fijados = nuevosFijados;
+
       docentes.forEach(d => {
         if (d.tutoria === antigua) d.tutoria = limpio;
       });
@@ -699,6 +741,9 @@
       zonas.splice(index, 1);
       for (let key in cuadrante) {
         if (key.endsWith(`_${zonaBorrada}`)) delete cuadrante[key];
+      }
+      for (let k in fijados) {
+        if (k.includes(`_${zonaBorrada}_`)) delete fijados[k];
       }
       docentes.forEach(d => {
         if (d.tutoria === zonaBorrada) d.tutoria = '';
@@ -731,6 +776,16 @@
       for (let key in cuadrante) {
         cuadrante[key] = (cuadrante[key] || []).map(n => n === antiguo ? limpio : n);
       }
+      const nuevosFijados = {};
+      for (let k in fijados) {
+        const [dia, z, doc] = k.split('_');
+        if (doc === antiguo) {
+          nuevosFijados[`${dia}_${z}_${limpio}`] = true;
+        } else {
+          nuevosFijados[k] = true;
+        }
+      }
+      fijados = nuevosFijados;
       guardarTodo();
     }
   }
@@ -753,6 +808,9 @@
       docentes.splice(index, 1);
       for (let key in cuadrante) {
         cuadrante[key] = (cuadrante[key] || []).filter(n => n !== borrado);
+      }
+      for (let k in fijados) {
+        if (k.endsWith(`_${borrado}`)) delete fijados[k];
       }
       guardarTodo();
     }
@@ -828,15 +886,31 @@
         return;
       }
 
+      const estabaFijado = fijados[`${draggedData.dia}_${draggedData.zona}_${draggedData.nombre}`];
+
       if (targetList.length < maxCap) {
         cuadrante[origKey] = (cuadrante[origKey] || []).filter(n => n !== draggedData.nombre);
         targetList.push(draggedData.nombre);
+        if (estabaFijado) {
+          delete fijados[`${draggedData.dia}_${draggedData.zona}_${draggedData.nombre}`];
+          fijados[`${diaDestino}_${zonaDestino}_${draggedData.nombre}`] = true;
+        }
       } else {
-        // Intercambio automático
         const desplazado = targetList.pop();
+        const desplazadoEstabaFijado = fijados[`${diaDestino}_${zonaDestino}_${desplazado}`];
+
         cuadrante[origKey] = (cuadrante[origKey] || []).filter(n => n !== draggedData.nombre);
         cuadrante[origKey].push(desplazado);
         targetList.push(draggedData.nombre);
+
+        if (estabaFijado) {
+          delete fijados[`${draggedData.dia}_${draggedData.zona}_${draggedData.nombre}`];
+          fijados[`${diaDestino}_${zonaDestino}_${draggedData.nombre}`] = true;
+        }
+        if (desplazadoEstabaFijado) {
+          delete fijados[`${diaDestino}_${zonaDestino}_${desplazado}`];
+          fijados[`${draggedData.dia}_${draggedData.zona}_${desplazado}`] = true;
+        }
       }
     }
 
@@ -847,12 +921,14 @@
   function quitarAsignacion(dia, zona, nombre) {
     const key = `${dia}_${zona}`;
     cuadrante[key] = (cuadrante[key] || []).filter(n => n !== nombre);
+    delete fijados[`${dia}_${zona}_${nombre}`];
     guardarTodo();
   }
 
   function limpiarCuadrante() {
-    if (confirm("¿Vaciar todas las asignaciones del cuadrante?")) {
+    if (confirm("¿Vaciar todas las asignaciones del cuadrante?\n(Se borrarán tanto las normales como las que tienen candado 🔒)")) {
       cuadrante = {};
+      fijados = {};
       guardarTodo();
     }
   }
@@ -894,7 +970,6 @@
       </div>
     `).join('');
 
-    // Balance de puestos vs requeridos
     const puestosSemanales = zonas.reduce((sum, z) => sum + (z.capacidad * 5), 0);
     const guardiasRequeridas = docentes.reduce((sum, d) => sum + (d.maxGuardias !== undefined ? d.maxGuardias : 2), 0);
     const badgeBalance = document.getElementById('balance-badge');
@@ -960,14 +1035,24 @@
                     const hayConflicto = verificarConflictoDia(nombreDocente, dia);
                     const docObj = docentes.find(d => d.nombre === nombreDocente);
                     const esSuPista = docObj && docObj.tutoria === zona.nombre;
+                    const estaFijado = !!fijados[`${dia}_${zona.nombre}_${nombreDocente}`];
 
                     return `
-                      <div class="assigned-chip ${hayConflicto ? 'conflict' : ''} ${esSuPista ? 'is-tutor' : ''}" 
+                      <div class="assigned-chip ${estaFijado ? 'is-locked' : ''} ${hayConflicto ? 'conflict' : ''} ${esSuPista ? 'is-tutor' : ''}" 
                            draggable="true" 
                            ondragstart="onDragStartSlot(event, '${dia}', '${zona.nombre}', '${nombreDocente}')"
-                           title="${hayConflicto ? '¡Atención! Este docente tiene 2 guardias el mismo día' : (esSuPista ? 'Asignado en su tutoría' : 'Arrastra para mover o intercambiar')}">
-                        <span>${nombreDocente} ${esSuPista ? '⭐' : ''} ${hayConflicto ? '⚠️' : ''}</span>
-                        <button class="icon-btn" style="padding:0 2px;" onclick="quitarAsignacion('${dia}', '${zona.nombre}', '${nombreDocente}')">&times;</button>
+                           title="${estaFijado ? 'Turno fijado con candado (no se moverá en el reparto automático)' : 'Turno flexible'}">
+                        
+                        <div style="display:flex; align-items:center; gap:4px; overflow:hidden;">
+                          <button class="icon-btn icon-btn-lock" onclick="toggleFijar('${dia}', '${zona.nombre}', '${nombreDocente}')" title="${estaFijado ? 'Desbloquear turno' : 'Fijar turno con candado'}">
+                            ${estaFijado ? '🔒' : '🔓'}
+                          </button>
+                          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            ${nombreDocente} ${esSuPista ? '⭐' : ''} ${hayConflicto ? '⚠️' : ''}
+                          </span>
+                        </div>
+
+                        <button class="icon-btn" style="padding:0 2px;" onclick="quitarAsignacion('${dia}', '${zona.nombre}', '${nombreDocente}')" title="Eliminar asignación">&times;</button>
                       </div>
                     `;
                   }).join('')}
@@ -987,7 +1072,6 @@
     }).join('');
   }
 
-  // Inicialización
   render();
 </script>
 </body>
